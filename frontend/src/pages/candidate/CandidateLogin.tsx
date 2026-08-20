@@ -41,17 +41,17 @@ export default function CandidateLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-600/20">
             <span className="text-xl font-bold text-white">T</span>
           </div>
-          <h1 className="text-2xl font-semibold text-slate-900">Candidate Portal</h1>
-          <p className="mt-1.5 text-sm text-slate-500">Enter your Test ID to continue</p>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Candidate Portal</h1>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Enter your Test ID to continue</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               label="Test ID"

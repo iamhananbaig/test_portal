@@ -87,7 +87,7 @@ export default function CandidateInstructions() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <Spinner size="lg" />
       </div>
     )
@@ -95,10 +95,10 @@ export default function CandidateInstructions() {
 
   if (error && !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="text-center">
           <AlertTriangle className="mx-auto h-10 w-10 text-rose-500 mb-4" />
-          <p className="text-rose-600 mb-4">{error}</p>
+          <p className="text-rose-600 dark:text-rose-400 mb-4">{error}</p>
           <Button onClick={() => navigate('/candidate')}>Back to Login</Button>
         </div>
       </div>
@@ -106,9 +106,9 @@ export default function CandidateInstructions() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-5">
             <h1 className="text-xl font-semibold">Test Instructions</h1>
             <p className="mt-0.5 text-primary-100 text-sm">
@@ -118,44 +118,44 @@ export default function CandidateInstructions() {
 
           <div className="p-8 space-y-6">
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3.5">
-                <BookOpen className="h-4 w-4 text-slate-400" />
+              <div className="flex items-center gap-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 p-3.5">
+                <BookOpen className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                 <div>
-                  <div className="text-xs text-slate-400">Candidate</div>
-                  <div className="text-sm font-medium text-slate-900">{data?.candidate_name}</div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500">Candidate</div>
+                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{data?.candidate_name}</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3.5">
-                <span className="text-slate-400 font-mono text-xs">#</span>
+              <div className="flex items-center gap-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 p-3.5">
+                <span className="text-slate-400 dark:text-slate-500 font-mono text-xs">#</span>
                 <div>
-                  <div className="text-xs text-slate-400">Test ID</div>
-                  <div className="text-sm font-medium text-slate-900 font-mono">
+                  <div className="text-xs text-slate-400 dark:text-slate-500">Test ID</div>
+                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100 font-mono">
                     {data?.test_id}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3.5">
-                <Clock className="h-4 w-4 text-slate-400" />
+              <div className="flex items-center gap-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 p-3.5">
+                <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                 <div>
-                  <div className="text-xs text-slate-400">Duration</div>
-                  <div className="text-sm font-medium text-slate-900">
+                  <div className="text-xs text-slate-400 dark:text-slate-500">Duration</div>
+                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
                     {data?.duration_minutes} minutes
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3.5">
-                <span className="text-slate-400 font-semibold text-xs">/</span>
+              <div className="flex items-center gap-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 p-3.5">
+                <span className="text-slate-400 dark:text-slate-500 font-semibold text-xs">/</span>
                 <div>
-                  <div className="text-xs text-slate-400">Total Marks</div>
-                  <div className="text-sm font-medium text-slate-900">{data?.total_marks}</div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500">Total Marks</div>
+                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{data?.total_marks}</div>
                 </div>
               </div>
             </div>
 
             {data?.category_breakdown && data.category_breakdown.length > 0 && (
               <div>
-                <h3 className="font-medium text-slate-900 mb-2 text-sm">Category Breakdown</h3>
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <h3 className="font-medium text-slate-900 dark:text-slate-100 mb-2 text-sm">Category Breakdown</h3>
+                <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
                   <Table
                     columns={[
                       { key: 'category', header: 'Category' },
@@ -176,8 +176,8 @@ export default function CandidateInstructions() {
             )}
 
             <div>
-              <h3 className="font-medium text-slate-900 mb-2 text-sm">Instructions</h3>
-              <ol className="space-y-2 text-sm text-slate-600">
+              <h3 className="font-medium text-slate-900 dark:text-slate-100 mb-2 text-sm">Instructions</h3>
+              <ol className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                 {instructions.map((instruction, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-700 mt-0.5">
@@ -190,7 +190,7 @@ export default function CandidateInstructions() {
             </div>
 
             {error && (
-              <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700 flex items-center gap-2">
+              <div className="rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 p-3 text-sm text-rose-700 dark:text-rose-400 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                 {error}
               </div>

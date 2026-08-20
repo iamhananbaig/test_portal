@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Flag, AlertTriangle } from 'lucide-react'
+import { Flag, AlertTriangle, Sun, Moon } from 'lucide-react'
 import { candidateApi } from '../../services/api'
+import { useTheme } from '../../context/ThemeContext'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import Spinner from '../../components/ui/Spinner'
@@ -38,6 +39,7 @@ interface TestData {
 export default function CandidateTest() {
   const { testId } = useParams<{ testId: string }>()
   const navigate = useNavigate()
+  const { theme, toggle } = useTheme()
 
   const [data, setData] = useState<TestData | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -290,10 +292,10 @@ export default function CandidateTest() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="mt-4 text-sm text-slate-500">Loading test...</p>
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Loading test...</p>
         </div>
       </div>
     )
@@ -301,10 +303,10 @@ export default function CandidateTest() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <div className="text-center">
           <AlertTriangle className="mx-auto h-10 w-10 text-rose-500 mb-4" />
-          <p className="text-rose-600 mb-4">{error}</p>
+          <p className="text-rose-600 dark:text-rose-400 mb-4">{error}</p>
           <Button onClick={() => navigate('/candidate')}>Back to Login</Button>
         </div>
       </div>
@@ -314,19 +316,19 @@ export default function CandidateTest() {
   if (!data || !currentQuestion) return null
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-2.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
         <div className="flex items-center gap-4">
-          <span className="font-medium text-slate-900 text-sm">{data.candidate_name}</span>
-          <span className="text-xs text-slate-400 font-mono">{data.test_id}</span>
+          <span className="font-medium text-slate-900 dark:text-slate-100 text-sm">{data.candidate_name}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">{data.test_id}</span>
         </div>
 
         <div className="flex items-center gap-4">
           <div
             className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
               isWarning
-                ? 'bg-rose-100 text-rose-700 animate-pulse'
-                : 'bg-slate-100 text-slate-600'
+                ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 animate-pulse'
+                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
             }`}
           >
             Time: {formatTime(remainingSeconds)}
@@ -334,15 +336,23 @@ export default function CandidateTest() {
 
           <div className="flex items-center gap-1">
             {saveStatus === 'saving' && (
-              <span className="text-xs text-slate-400">Saving...</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">Saving...</span>
             )}
             {saveStatus === 'saved' && (
-              <span className="text-xs text-emerald-600">Saved</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400">Saved</span>
             )}
             {saveStatus === 'unsaved' && (
               <span className="text-xs text-amber-500">Unsaved</span>
             )}
           </div>
+
+          <button
+            onClick={toggle}
+            className="rounded-lg p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
 
           <Button variant="danger" size="sm" onClick={() => setShowSubmitConfirm(true)}>
             Submit Test
@@ -351,9 +361,9 @@ export default function CandidateTest() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 bg-white border-r border-slate-200 overflow-y-auto flex-shrink-0 p-4 hidden md:block">
+        <aside className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto flex-shrink-0 p-4 hidden md:block">
           <div className="mb-4">
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
               Questions ({answeredCount}/{data.questions.length} answered, {flaggedCount} flagged)
             </div>
           </div>
@@ -370,13 +380,13 @@ export default function CandidateTest() {
                     isCurrent
                       ? 'bg-primary-600 text-white shadow-sm'
                       : isAnswered
-                        ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                        : 'text-slate-600 hover:bg-slate-50'
+                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   <span
                     className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-medium ${
-                      isCurrent ? 'bg-white/20' : 'bg-slate-200/60'
+                      isCurrent ? 'bg-white/20' : 'bg-slate-200/60 dark:bg-slate-600/60'
                     }`}
                   >
                     {i + 1}
@@ -394,15 +404,15 @@ export default function CandidateTest() {
           </div>
 
           <div className="mt-5 space-y-1.5">
-            <div className="flex items-center gap-2 text-[11px] text-slate-400">
-              <span className="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-300"></span>
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+              <span className="w-2.5 h-2.5 rounded bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-700"></span>
               Answered
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-slate-400">
-              <span className="w-2.5 h-2.5 rounded bg-slate-100 border border-slate-300"></span>
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+              <span className="w-2.5 h-2.5 rounded bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600"></span>
               Unanswered
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-slate-400">
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
               <Flag className="h-3 w-3 text-amber-500" />
               Flagged
             </div>
@@ -416,10 +426,10 @@ export default function CandidateTest() {
                 <span className="bg-primary-50 text-primary-700 text-[11px] font-medium px-2 py-0.5 rounded-full">
                   {currentQuestion.category}
                 </span>
-                <span className="text-sm text-slate-500">
+                <span className="text-sm text-slate-500 dark:text-slate-400">
                   Question {currentIndex + 1} of {data.questions.length}
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-400 dark:text-slate-500">
                   ({currentQuestion.marks}{' '}
                   {currentQuestion.marks === 1 ? 'mark' : 'marks'})
                 </span>
@@ -442,15 +452,15 @@ export default function CandidateTest() {
               </button>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 p-5 mb-5 shadow-xs">
-              <p className="text-slate-900 text-sm leading-relaxed whitespace-pre-wrap">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 mb-5 shadow-xs">
+              <p className="text-slate-900 dark:text-slate-100 text-sm leading-relaxed whitespace-pre-wrap">
                 {currentQuestion.text}
               </p>
               {currentQuestion.image_path && (
                 <img
                   src={`/storage/${currentQuestion.image_path}`}
                   alt="Question"
-                  className="mt-3 max-w-full rounded-lg border border-slate-200"
+                  className="mt-3 max-w-full rounded-lg border border-slate-200 dark:border-slate-700"
                 />
               )}
             </div>
@@ -462,8 +472,8 @@ export default function CandidateTest() {
                     key={option.id}
                     className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all duration-150 ${
                       currentQuestion.selected_option_id === option.id
-                        ? 'border-primary-500 bg-primary-50 shadow-xs'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800'
                     }`}
                   >
                     <input
@@ -476,10 +486,10 @@ export default function CandidateTest() {
                       className="mt-0.5 h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500"
                     />
                     <div className="flex-1">
-                      <span className="font-medium text-slate-600 mr-2 text-sm">
+                      <span className="font-medium text-slate-600 dark:text-slate-300 mr-2 text-sm">
                         {option.label}.
                       </span>
-                      <span className="text-sm text-slate-900">{option.text}</span>
+                      <span className="text-sm text-slate-900 dark:text-slate-100">{option.text}</span>
                     </div>
                     {option.image_path && (
                       <img
@@ -492,7 +502,7 @@ export default function CandidateTest() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-xs">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-xs">
                 <textarea
                   value={currentQuestion.descriptive_answer || ''}
                   onChange={(e) =>
@@ -500,7 +510,7 @@ export default function CandidateTest() {
                   }
                   placeholder="Type your answer here..."
                   rows={8}
-                  className="w-full border-0 focus:ring-0 resize-y text-sm text-slate-900 placeholder:text-slate-400"
+                  className="w-full border-0 focus:ring-0 resize-y text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
             )}
@@ -518,7 +528,7 @@ export default function CandidateTest() {
                 <select
                   value={currentIndex}
                   onChange={(e) => goToQuestion(parseInt(e.target.value, 10))}
-                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white"
+                  className="border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                 >
                   {data.questions.map((q, i) => (
                     <option key={q.id} value={i}>
@@ -570,11 +580,11 @@ export default function CandidateTest() {
           </>
         }
       >
-        <p className="text-slate-600 mb-2 text-sm">
+        <p className="text-slate-600 dark:text-slate-300 mb-2 text-sm">
           You have answered {answeredCount} of {data.questions.length} questions.
           {flaggedCount > 0 && ` ${flaggedCount} questions are flagged for review.`}
         </p>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           Once submitted, you cannot go back to change your answers.
         </p>
       </Modal>
