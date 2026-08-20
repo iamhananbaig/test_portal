@@ -13,9 +13,9 @@ import {
   Sun,
   Moon,
 } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../context/useTheme'
-import Button from '../components/ui/Button'
+import { useAuth } from '@/context/useAuth'
+import { useTheme } from '@/context/useTheme'
+import Button from '@/components/ui/Button'
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },

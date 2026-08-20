@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { useAuth } from '../../context/AuthContext'
-import Button from '../../components/ui/Button'
-import Input from '../../components/ui/Input'
+import { useAuth } from '@/context/useAuth'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
 
 export default function Login() {
   const [email, setEmail] = useState('')

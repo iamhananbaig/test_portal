@@ -29,7 +29,3 @@ export const testGenerateSchema = z.object({
 export const candidateLoginSchema = z.object({
   test_id: z.string().min(1, 'Test ID is required'),
 })
-
-export const markingSchema = z.object({
-  marks: z.record(z.string(), z.string()),
-})

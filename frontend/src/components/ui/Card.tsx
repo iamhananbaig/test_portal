@@ -25,9 +25,3 @@ export function CardHeader({ children, className = '' }: CardProps) {
 export function CardContent({ children, className = '' }: CardProps) {
   return <div className={`px-6 py-4 ${className}`}>{children}</div>
 }
-
-export function CardFooter({ children, className = '' }: CardProps) {
-  return (
-    <div className={`border-t border-slate-100 dark:border-slate-700 px-6 py-4 ${className}`}>{children}</div>
-  )
-}

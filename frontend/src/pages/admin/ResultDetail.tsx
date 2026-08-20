@@ -1,13 +1,13 @@
 import { useParams, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
-import api from '../../services/api'
-import Button from '../../components/ui/Button'
-import Card, { CardContent, CardHeader } from '../../components/ui/Card'
-import Skeleton from '../../components/ui/Skeleton'
-import StatusBadge from '../../components/ui/StatusBadge'
-import PageHeader from '../../components/ui/PageHeader'
-import { formatDateTime } from '../../utils/dates'
+import api from '@/services/api'
+import Button from '@/components/ui/Button'
+import Card, { CardContent, CardHeader } from '@/components/ui/Card'
+import Skeleton from '@/components/ui/Skeleton'
+import StatusBadge from '@/components/ui/StatusBadge'
+import PageHeader from '@/components/ui/PageHeader'
+import { formatDateTime } from '@/utils/dates'
 
 interface TestInfo {
   id: number
@@ -27,7 +27,6 @@ interface ResultInfo {
   mcq_marks: number
   descriptive_marks: number
   total_obtained: number
-  is_finalized: boolean
 }
 
 interface CategoryBreakdown {

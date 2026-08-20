@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { LogIn } from 'lucide-react'
-import { candidateApi } from '../../services/api'
-import Button from '../../components/ui/Button'
-import Input from '../../components/ui/Input'
-import ThemeToggle from '../../components/ThemeToggle'
-import { candidateLoginSchema } from '../../lib/validations'
+import { candidateApi } from '@/services/api'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
+import ThemeToggle from '@/components/ThemeToggle'
+import { candidateLoginSchema } from '@/lib/validations'
 
 export default function CandidateLogin() {
   const [loading, setLoading] = useState(false)

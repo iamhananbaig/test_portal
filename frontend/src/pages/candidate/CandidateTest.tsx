@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Flag, AlertTriangle, Sun, Moon, Menu, X, ImageIcon } from 'lucide-react'
-import { candidateApi } from '../../services/api'
-import { useTheme } from '../../context/useTheme'
-import Button from '../../components/ui/Button'
-import Modal from '../../components/ui/Modal'
-import Skeleton from '../../components/ui/Skeleton'
+import { candidateApi } from '@/services/api'
+import { useTheme } from '@/context/useTheme'
+import Button from '@/components/ui/Button'
+import Modal from '@/components/ui/Modal'
+import Skeleton from '@/components/ui/Skeleton'
 
 interface QuestionOption {
   id: number
@@ -21,7 +21,6 @@ interface Question {
   type: 'mcq' | 'descriptive'
   marks: number
   category: string
-  category_id: number
   display_order: number
   options: QuestionOption[]
   selected_option_id: number | null

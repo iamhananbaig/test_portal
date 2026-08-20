@@ -2,19 +2,19 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart3 } from 'lucide-react'
-import api from '../../services/api'
-import Input from '../../components/ui/Input'
-import Select from '../../components/ui/Select'
-import Button from '../../components/ui/Button'
-import Card, { CardContent } from '../../components/ui/Card'
-import Table, { TableRow, TableCell } from '../../components/ui/Table'
-import Pagination from '../../components/ui/Pagination'
-import Skeleton from '../../components/ui/Skeleton'
-import EmptyState from '../../components/ui/EmptyState'
-import PageHeader from '../../components/ui/PageHeader'
-import StatusBadge from '../../components/ui/StatusBadge'
-import { useDebounce } from '../../hooks/useDebounce'
-import { formatDateTime } from '../../utils/dates'
+import api from '@/services/api'
+import Input from '@/components/ui/Input'
+import Select from '@/components/ui/Select'
+import Button from '@/components/ui/Button'
+import Card, { CardContent } from '@/components/ui/Card'
+import Table, { TableRow, TableCell } from '@/components/ui/Table'
+import Pagination from '@/components/ui/Pagination'
+import Skeleton from '@/components/ui/Skeleton'
+import EmptyState from '@/components/ui/EmptyState'
+import PageHeader from '@/components/ui/PageHeader'
+import StatusBadge from '@/components/ui/StatusBadge'
+import { useDebounce } from '@/hooks/useDebounce'
+import { formatDateTime } from '@/utils/dates'
 
 interface Result {
   id: number
@@ -25,10 +25,7 @@ interface Result {
   status: string
   created_at: string
   submitted_at: string | null
-  mcq_marks: number | null
-  descriptive_marks: number | null
   total_obtained: number | null
-  is_finalized: boolean
 }
 
 export default function Results() {

@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { HelpCircle, FolderOpen, FileText, PenLine } from 'lucide-react'
-import api from '../../services/api'
-import Card, { CardContent, CardHeader } from '../../components/ui/Card'
-import StatusBadge from '../../components/ui/StatusBadge'
-import Skeleton from '../../components/ui/Skeleton'
-import PageHeader from '../../components/ui/PageHeader'
+import api from '@/services/api'
+import Card, { CardContent, CardHeader } from '@/components/ui/Card'
+import StatusBadge from '@/components/ui/StatusBadge'
+import Skeleton from '@/components/ui/Skeleton'
+import PageHeader from '@/components/ui/PageHeader'
 
 interface DashboardStats {
   total_questions: number
