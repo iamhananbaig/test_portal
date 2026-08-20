@@ -6,7 +6,7 @@ import Input from '../../components/ui/Input'
 import Card, { CardContent } from '../../components/ui/Card'
 import Table, { TableRow, TableCell } from '../../components/ui/Table'
 import Modal from '../../components/ui/Modal'
-import Spinner from '../../components/ui/Spinner'
+import Skeleton from '../../components/ui/Skeleton'
 import EmptyState from '../../components/ui/EmptyState'
 import Toast from '../../components/ui/Toast'
 import PageHeader from '../../components/ui/PageHeader'
@@ -93,8 +93,15 @@ export default function Categories() {
       <Card className="mt-6">
         <CardContent>
           {loading ? (
-            <div className="py-12 flex justify-center">
-              <Spinner />
+            <div className="space-y-3 p-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex gap-4">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              ))}
             </div>
           ) : categories.length === 0 ? (
             <EmptyState

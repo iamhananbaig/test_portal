@@ -7,7 +7,7 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import Textarea from '../../components/ui/Textarea'
 import Card, { CardContent } from '../../components/ui/Card'
-import Spinner from '../../components/ui/Spinner'
+import Skeleton from '../../components/ui/Skeleton'
 import PageHeader from '../../components/ui/PageHeader'
 
 interface Category {
@@ -111,8 +111,18 @@ export default function QuestionForm() {
 
   if (loading)
     return (
-      <div className="py-12 flex justify-center">
-        <Spinner />
+      <div className="py-12 px-6">
+        <Skeleton className="h-8 w-48 mb-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <Skeleton className="h-28 w-full mt-4" />
+        <Skeleton className="h-10 w-1/3 mt-4" />
+        <div className="mt-6 flex justify-end gap-2">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-32" />
+        </div>
       </div>
     )
 

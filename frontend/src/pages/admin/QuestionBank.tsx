@@ -9,7 +9,7 @@ import Badge from '../../components/ui/Badge'
 import Card, { CardContent } from '../../components/ui/Card'
 import Table, { TableRow, TableCell } from '../../components/ui/Table'
 import Pagination from '../../components/ui/Pagination'
-import Spinner from '../../components/ui/Spinner'
+import Skeleton from '../../components/ui/Skeleton'
 import EmptyState from '../../components/ui/EmptyState'
 import PageHeader from '../../components/ui/PageHeader'
 import { useDebounce } from '../../hooks/useDebounce'
@@ -167,8 +167,17 @@ export default function QuestionBank() {
           </div>
 
           {loading ? (
-            <div className="py-12 flex justify-center">
-              <Spinner />
+            <div className="space-y-3 p-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex gap-4">
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-2/6" />
+                  <Skeleton className="h-4 w-1/12" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/6" />
+                </div>
+              ))}
             </div>
           ) : questions.length === 0 ? (
             <EmptyState

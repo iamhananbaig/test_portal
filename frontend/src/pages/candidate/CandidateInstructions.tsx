@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import { Clock, BookOpen, AlertTriangle, ArrowLeft, Play } from 'lucide-react'
 import { candidateApi } from '../../services/api'
 import Button from '../../components/ui/Button'
-import Spinner from '../../components/ui/Spinner'
+import Skeleton from '../../components/ui/Skeleton'
 import Table, { TableRow, TableCell } from '../../components/ui/Table'
 
 interface CategoryBreakdown {
@@ -88,7 +88,12 @@ export default function CandidateInstructions() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <Spinner size="lg" />
+        <div className="w-full max-w-2xl mx-auto px-4 space-y-4">
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-10 w-full rounded-lg" />
+          <Skeleton className="h-10 w-full rounded-lg" />
+        </div>
       </div>
     )
   }

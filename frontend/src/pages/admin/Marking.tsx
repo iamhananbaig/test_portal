@@ -6,7 +6,7 @@ import Button from '../../components/ui/Button'
 import Card, { CardContent } from '../../components/ui/Card'
 import Table, { TableRow, TableCell } from '../../components/ui/Table'
 import Pagination from '../../components/ui/Pagination'
-import Spinner from '../../components/ui/Spinner'
+import Skeleton from '../../components/ui/Skeleton'
 import EmptyState from '../../components/ui/EmptyState'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
@@ -64,8 +64,17 @@ export default function Marking() {
       <Card className="mt-6">
         <CardContent>
           {loading ? (
-            <div className="py-12 flex justify-center">
-              <Spinner />
+            <div className="space-y-3 p-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex gap-4">
+                  <Skeleton className="h-4 w-1/4" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/6" />
+                </div>
+              ))}
             </div>
           ) : tests.length === 0 ? (
             <EmptyState

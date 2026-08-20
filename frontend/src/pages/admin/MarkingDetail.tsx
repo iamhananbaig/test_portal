@@ -5,7 +5,7 @@ import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Card, { CardContent, CardHeader } from '../../components/ui/Card'
 import Input from '../../components/ui/Input'
-import Spinner from '../../components/ui/Spinner'
+import Skeleton from '../../components/ui/Skeleton'
 import Toast from '../../components/ui/Toast'
 import PageHeader from '../../components/ui/PageHeader'
 
@@ -131,8 +131,19 @@ export default function MarkingDetail() {
 
   if (loading) {
     return (
-      <div className="py-12 flex justify-center">
-        <Spinner />
+      <div className="py-12 px-6 space-y-4">
+        <Skeleton className="h-8 w-64 mb-6" />
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 space-y-3">
+            <div className="flex justify-between">
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-4 w-1/6" />
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-10 w-1/3" />
+          </div>
+        ))}
       </div>
     )
   }

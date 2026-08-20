@@ -5,7 +5,7 @@ import { candidateApi } from '../../services/api'
 import { useTheme } from '../../context/ThemeContext'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
-import Spinner from '../../components/ui/Spinner'
+import Skeleton from '../../components/ui/Skeleton'
 
 interface QuestionOption {
   id: number
@@ -292,10 +292,46 @@ export default function CandidateTest() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Loading test...</p>
+      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
+        <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-8 w-24 rounded-lg" />
+          </div>
+        </header>
+        <div className="flex flex-1 overflow-hidden">
+          <aside className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 hidden md:block">
+            <Skeleton className="h-3 w-40 mb-4" />
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="flex items-center gap-2 mb-2">
+                <Skeleton className="h-7 w-7 rounded-full" />
+                <Skeleton className="h-4 flex-1" />
+              </div>
+            ))}
+          </aside>
+          <main className="flex-1 p-6">
+            <div className="max-w-3xl mx-auto space-y-4">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <Skeleton className="h-40 w-full rounded-xl" />
+              <div className="space-y-2.5">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-14 w-full rounded-xl" />
+                ))}
+              </div>
+              <div className="flex justify-between mt-6">
+                <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     )
