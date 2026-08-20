@@ -58,7 +58,22 @@ class QuestionController extends Controller
             }
         }
 
-        return response()->json(new QuestionResource($question->load('category')), 201);
+        if ($request->hasFile('question_image')) {
+            $path = $this->imageService->save($request->file('question_image'), 'questions');
+            $question->update(['image_path' => $path]);
+        }
+
+        if ($request->hasFile('options')) {
+            foreach ($request->file('options') as $index => $optionFile) {
+                if ($optionFile) {
+                    $path = $this->imageService->save($optionFile, 'questions/options');
+                    $label = $request->input("options.{$index}.label");
+                    $question->options()->where('label', $label)->update(['image_path' => $path]);
+                }
+            }
+        }
+
+        return response()->json(new QuestionResource($question->load('category', 'options')), 201);
     }
 
     public function update(StoreQuestionRequest $request, Question $question): JsonResponse
@@ -69,6 +84,24 @@ class QuestionController extends Controller
             $question->options()->delete();
             foreach ($request->input('options') as $option) {
                 $question->options()->create($option);
+            }
+        }
+
+        if ($request->hasFile('question_image')) {
+            if ($question->image_path) {
+                $this->imageService->delete($question->image_path);
+            }
+            $path = $this->imageService->save($request->file('question_image'), 'questions');
+            $question->update(['image_path' => $path]);
+        }
+
+        if ($request->hasFile('options')) {
+            foreach ($request->file('options') as $index => $optionFile) {
+                if ($optionFile) {
+                    $path = $this->imageService->save($optionFile, 'questions/options');
+                    $label = $request->input("options.{$index}.label");
+                    $question->options()->where('label', $label)->update(['image_path' => $path]);
+                }
             }
         }
 

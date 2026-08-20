@@ -14,13 +14,12 @@ class StoreQuestionRequest extends FormRequest
 
     public function rules(): array
     {
-        $questionId = $this->route('question')?->id;
-
         return [
             'category_id' => ['required', 'exists:categories,id'],
             'type' => ['required', Rule::in(['mcq', 'descriptive'])],
             'text' => ['required', 'string'],
             'image_path' => ['nullable', 'string'],
+            'question_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
             'marks' => ['required', 'numeric', 'gt:0'],
             'is_active' => ['sometimes', 'boolean'],
             'options' => ['required_if:type,mcq', 'array', 'size:4'],
@@ -28,6 +27,7 @@ class StoreQuestionRequest extends FormRequest
             'options.*.text' => ['required_with:options', 'string'],
             'options.*.is_correct' => ['required_with:options', 'boolean'],
             'options.*.image_path' => ['nullable', 'string'],
+            'options.*.image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
         ];
     }
 
