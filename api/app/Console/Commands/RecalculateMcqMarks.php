@@ -1,0 +1,110 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Models\CandidateAnswer;
+use App\Models\QuestionOption;
+use App\Models\Test;
+use Illuminate\Console\Command;
+
+class RecalculateMcqMarks extends Command
+{
+    protected $signature = 'results:recalculate-mcq {--test-id= : Recalculate for a specific test_id} {--dry-run : Show what would change without writing}';
+
+    protected $description = 'Backfill MCQ awarded_marks for tests submitted before per-answer marks were persisted.';
+
+    public function handle(): int
+    {
+        $query = Test::query()
+            ->whereIn('status', ['completed', 'pending_review'])
+            ->whereHas('result');
+
+        if ($testId = $this->option('test-id')) {
+            $query->where('test_id', $testId);
+        }
+
+        $tests = $query->get();
+        $dryRun = $this->option('dry-run');
+
+        if ($tests->isEmpty()) {
+            $this->info('No completed/pending_review tests found with results.');
+
+            return self::SUCCESS;
+        }
+
+        $this->info(($dryRun ? '[DRY RUN] ' : '').'Processing '.$tests->count().' test(s)...');
+        $this->newLine();
+
+        $updated = 0;
+        $skipped = 0;
+
+        foreach ($tests as $test) {
+            $mcqAnswers = CandidateAnswer::where('test_id', $test->id)
+                ->whereNotNull('selected_option_id')
+                ->with('question')
+                ->get();
+
+            if ($mcqAnswers->isEmpty()) {
+                $this->line("  {$test->test_id}: No MCQ answers, skipping.");
+                $skipped++;
+
+                continue;
+            }
+
+            $questionIds = $mcqAnswers->pluck('question_id')->unique();
+            $correctOptionIds = QuestionOption::where('is_correct', true)
+                ->whereIn('question_id', $questionIds)
+                ->pluck('id', 'question_id');
+
+            $mcqMarks = 0;
+            $answersToUpdate = 0;
+
+            foreach ($mcqAnswers as $answer) {
+                $isCorrect = $correctOptionIds->get($answer->question_id) === $answer->selected_option_id;
+                $marks = $isCorrect ? ($answer->question->marks ?? 1) : 0;
+                $mcqMarks += $marks;
+
+                if ($answer->awarded_marks === null || (float) $answer->awarded_marks !== (float) $marks) {
+                    $answersToUpdate++;
+                    if (! $dryRun) {
+                        $answer->update(['awarded_marks' => $marks]);
+                    }
+                }
+            }
+
+            $mcqMarks = round($mcqMarks, 2);
+            $result = $test->result;
+            $totalObtained = round($mcqMarks + (float) $result->descriptive_marks, 2);
+            $resultChanged = (float) $result->mcq_marks !== $mcqMarks
+                || (float) $result->total_obtained !== $totalObtained;
+
+            if (! $dryRun && $resultChanged) {
+                $result->update([
+                    'mcq_marks' => $mcqMarks,
+                    'total_obtained' => $totalObtained,
+                ]);
+            }
+
+            $status = $resultChanged || $answersToUpdate > 0 ? 'updated' : 'unchanged';
+            $this->line(sprintf(
+                '  %s: %s — %s MCQ marks, %d answers %s',
+                $test->test_id,
+                $status,
+                $mcqMarks,
+                $answersToUpdate,
+                $dryRun ? 'would be updated' : 'updated'
+            ));
+
+            if ($status === 'updated') {
+                $updated++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        $this->newLine();
+        $this->info(($dryRun ? '[DRY RUN] ' : '')."Done. {$updated} updated, {$skipped} unchanged.");
+
+        return self::SUCCESS;
+    }
+}
