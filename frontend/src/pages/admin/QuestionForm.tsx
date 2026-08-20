@@ -1,0 +1,192 @@
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router'
+import api from '../../services/api'
+import Button from '../../components/ui/Button'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
+import Card, { CardContent } from '../../components/ui/Card'
+
+interface Category {
+  id: number
+  name: string
+}
+
+interface Option {
+  label: string
+  text: string
+  is_correct: boolean
+}
+
+export default function QuestionForm() {
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const isEditing = Boolean(id)
+
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [categoryId, setCategoryId] = useState('')
+  const [type, setType] = useState('mcq')
+  const [text, setText] = useState('')
+  const [marks, setMarks] = useState('')
+  const [options, setOptions] = useState<Option[]>([
+    { label: 'A', text: '', is_correct: false },
+    { label: 'B', text: '', is_correct: false },
+    { label: 'C', text: '', is_correct: false },
+    { label: 'D', text: '', is_correct: false },
+  ])
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const catRes = await api.get('/categories', { params: { per_page: 100 } })
+        setCategories(catRes.data.data)
+        if (isEditing) {
+          const qRes = await api.get(`/questions/${id}`)
+          const q = qRes.data.data
+          setCategoryId(String(q.category_id))
+          setType(q.type)
+          setText(q.text)
+          setMarks(String(q.marks))
+          if (q.options?.length) {
+            setOptions(q.options)
+          }
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [id, isEditing])
+
+  const setCorrectOption = (index: number) => {
+    setOptions(options.map((opt, i) => ({ ...opt, is_correct: i === index })))
+  }
+
+  const updateOptionText = (index: number, value: string) => {
+    setOptions(options.map((opt, i) => (i === index ? { ...opt, text: value } : opt)))
+  }
+
+  const handleSave = async () => {
+    setError('')
+    setSaving(true)
+    try {
+      const payload: Record<string, unknown> = {
+        category_id: Number(categoryId),
+        type,
+        text,
+        marks: Number(marks),
+      }
+      if (type === 'mcq') {
+        payload.options = options
+      }
+      if (isEditing) {
+        await api.put(`/questions/${id}`, payload)
+      } else {
+        await api.post('/questions', payload)
+      }
+      navigate('/admin/questions')
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
+        const errors = axiosErr.response?.data?.errors
+        if (errors) {
+          setError(Object.values(errors).flat().join(', '))
+        } else {
+          setError(axiosErr.response?.data?.message || 'An error occurred')
+        }
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) return <p className="py-8 text-center text-gray-500">Loading...</p>
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900">{isEditing ? 'Edit Question' : 'Add Question'}</h1>
+      <Card className="mt-6">
+        <CardContent>
+          {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="Category"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              options={categories.map((c) => ({ value: c.id, label: c.name }))}
+              placeholder="Select category"
+            />
+            <Select
+              label="Type"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              options={[
+                { value: 'mcq', label: 'MCQ' },
+                { value: 'descriptive', label: 'Descriptive' },
+              ]}
+            />
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700">Question Text</label>
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              rows={4}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              placeholder="Enter question text..."
+            />
+          </div>
+          <div className="mt-4">
+            <Input
+              label="Marks"
+              type="number"
+              min="0.5"
+              step="0.5"
+              value={marks}
+              onChange={(e) => setMarks(e.target.value)}
+              placeholder="e.g. 4"
+            />
+          </div>
+          {type === 'mcq' && (
+            <div className="mt-6">
+              <h3 className="text-sm font-medium text-gray-700">Answer Options</h3>
+              <p className="mb-3 text-xs text-gray-500">Select the correct answer by clicking the radio button.</p>
+              <div className="space-y-3">
+                {options.map((opt, i) => (
+                  <div key={opt.label} className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="correct_option"
+                      checked={opt.is_correct}
+                      onChange={() => setCorrectOption(i)}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <span className="w-6 text-sm font-medium text-gray-700">{opt.label}.</span>
+                    <input
+                      type="text"
+                      value={opt.text}
+                      onChange={(e) => updateOptionText(i, e.target.value)}
+                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder={`Option ${opt.label}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="mt-6 flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => navigate('/admin/questions')}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving || !categoryId || !text.trim() || !marks}>
+              {saving ? 'Saving...' : 'Save Question'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
