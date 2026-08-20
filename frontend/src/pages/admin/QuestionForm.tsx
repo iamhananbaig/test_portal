@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Upload, X, ImageIcon } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
@@ -22,6 +22,8 @@ interface Option {
   label: string
   text: string
   is_correct: boolean
+  image_path?: string | null
+  id?: number
 }
 
 interface QuestionFormData {
@@ -47,6 +49,9 @@ export default function QuestionForm() {
     { label: 'D', text: '', is_correct: false },
   ])
   const [error, setError] = useState('')
+  const [questionImagePath, setQuestionImagePath] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const questionImageRef = useRef<HTMLInputElement>(null)
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<QuestionFormData>({
     resolver: zodResolver(questionSchema) as never,
@@ -90,6 +95,9 @@ export default function QuestionForm() {
           if (q.options?.length) {
             setOptions(q.options)
           }
+          if (q.image_path) {
+            setQuestionImagePath(q.image_path)
+          }
         }
       } finally {
         setLoading(false)
@@ -110,6 +118,77 @@ export default function QuestionForm() {
     setValue('options', updated)
   }
 
+  const handleQuestionImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !id) return
+
+    setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await api.post(`/questions/${id}/image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setQuestionImagePath(res.data.image_path)
+    } catch {
+      setError('Failed to upload image')
+    } finally {
+      setUploadingImage(false)
+      if (questionImageRef.current) questionImageRef.current.value = ''
+    }
+  }
+
+  const handleQuestionImageDelete = async () => {
+    if (!id) return
+    try {
+      await api.delete(`/questions/${id}/image`)
+      setQuestionImagePath(null)
+    } catch {
+      setError('Failed to remove image')
+    }
+  }
+
+  const handleOptionImageUpload = async (optionIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !id) return
+
+    const option = options[optionIndex]
+    const optionId = option.id
+    if (!optionId) return
+
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await api.post(`/questions/${id}/options/${optionId}/image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      const updated = options.map((opt, i) =>
+        i === optionIndex ? { ...opt, image_path: res.data.image_path } : opt,
+      )
+      setOptions(updated)
+      setValue('options', updated)
+    } catch {
+      setError('Failed to upload option image')
+    }
+  }
+
+  const handleOptionImageDelete = async (optionIndex: number) => {
+    const option = options[optionIndex]
+    const optionId = option.id
+    if (!id || !optionId) return
+
+    try {
+      await api.delete(`/questions/${id}/options/${optionId}/image`)
+      const updated = options.map((opt, i) =>
+        i === optionIndex ? { ...opt, image_path: null } : opt,
+      )
+      setOptions(updated)
+      setValue('options', updated)
+    } catch {
+      setError('Failed to remove option image')
+    }
+  }
+
   const onSubmit = async (data: QuestionFormData) => {
     setError('')
     setSaving(true)
@@ -121,7 +200,7 @@ export default function QuestionForm() {
         marks: Number(data.marks),
       }
       if (data.type === 'mcq') {
-        payload.options = options
+        payload.options = options.map(({ id: _id, image_path: _img, ...rest }) => rest)
       }
       if (isEditing) {
         await api.put(`/questions/${id}`, payload)
@@ -209,6 +288,50 @@ export default function QuestionForm() {
               placeholder="Enter question text..."
             />
           </div>
+          {isEditing && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Question Image (optional)
+              </label>
+              {questionImagePath ? (
+                <div className="relative inline-block">
+                  <img
+                    src={`/storage/${questionImagePath}`}
+                    alt="Question"
+                    className="max-h-40 rounded-lg border border-slate-200 dark:border-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleQuestionImageDelete}
+                    className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 hover:bg-rose-600 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <input
+                    ref={questionImageRef}
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={handleQuestionImageUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => questionImageRef.current?.click()}
+                    loading={uploadingImage}
+                    icon={<Upload className="h-4 w-4" />}
+                  >
+                    Upload Image
+                  </Button>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">JPG or PNG, max 5MB</p>
+                </div>
+              )}
+            </div>
+          )}
           <div className="mt-4">
             <Input
               label="Marks"
@@ -243,6 +366,36 @@ export default function QuestionForm() {
                       placeholder={`Option ${opt.label}`}
                       className="flex-1"
                     />
+                    {isEditing && opt.id && (
+                      <div className="flex items-center gap-1">
+                        {opt.image_path ? (
+                          <div className="relative">
+                            <img
+                              src={`/storage/${opt.image_path}`}
+                              alt={`Option ${opt.label}`}
+                              className="h-8 w-8 object-cover rounded border border-slate-200 dark:border-slate-700"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleOptionImageDelete(i)}
+                              className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full p-0.5 hover:bg-rose-600"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer text-slate-400 hover:text-primary-500 transition-colors">
+                            <ImageIcon className="h-4 w-4" />
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png"
+                              className="hidden"
+                              onChange={(e) => handleOptionImageUpload(i, e)}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

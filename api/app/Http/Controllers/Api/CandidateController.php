@@ -8,12 +8,17 @@ use App\Models\QuestionOption;
 use App\Models\Result;
 use App\Models\Test;
 use App\Models\TestQuestion;
+use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CandidateController extends Controller
 {
+    public function __construct(
+        private ImageService $imageService,
+    ) {}
+
     public function validateTest(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -124,6 +129,7 @@ class CandidateController extends Controller
                 ]),
                 'selected_option_id' => $answer?->selected_option_id,
                 'descriptive_answer' => $answer?->descriptive_answer,
+                'answer_image_path' => $answer?->answer_image_path,
                 'is_flagged' => $answer?->is_flagged ?? false,
             ];
         });
@@ -154,6 +160,7 @@ class CandidateController extends Controller
             'question_id' => ['required', 'exists:questions,id'],
             'selected_option_id' => ['nullable', 'exists:question_options,id'],
             'descriptive_answer' => ['nullable', 'string'],
+            'answer_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
             'time_spent_seconds' => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -175,11 +182,17 @@ class CandidateController extends Controller
             }
         }
 
+        $answerImagePath = null;
+        if ($request->hasFile('answer_image')) {
+            $answerImagePath = $this->imageService->save($request->file('answer_image'), 'answers');
+        }
+
         CandidateAnswer::updateOrCreate(
             ['test_id' => $test->id, 'question_id' => $validated['question_id']],
             [
                 'selected_option_id' => $validated['selected_option_id'] ?? null,
                 'descriptive_answer' => $validated['descriptive_answer'] ?? null,
+                'answer_image_path' => $answerImagePath,
                 'time_spent_seconds' => $validated['time_spent_seconds'] ?? 0,
             ]
         );

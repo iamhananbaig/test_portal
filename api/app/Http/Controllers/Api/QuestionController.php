@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreQuestionRequest;
 use App\Models\Question;
+use App\Models\QuestionOption;
 use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -98,6 +99,36 @@ class QuestionController extends Controller
         if ($question->image_path) {
             $this->imageService->delete($question->image_path);
             $question->update(['image_path' => null]);
+        }
+
+        return response()->json(['message' => 'Image removed']);
+    }
+
+    public function uploadOptionImage(Request $request, Question $question, QuestionOption $option): JsonResponse
+    {
+        if ($option->question_id !== $question->id) {
+            return response()->json(['message' => 'Option does not belong to this question.'], 422);
+        }
+
+        $request->validate([
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+        ]);
+
+        $path = $this->imageService->save($request->file('image'), 'questions/options');
+        $option->update(['image_path' => $path]);
+
+        return response()->json(['image_path' => $path]);
+    }
+
+    public function destroyOptionImage(Question $question, QuestionOption $option): JsonResponse
+    {
+        if ($option->question_id !== $question->id) {
+            return response()->json(['message' => 'Option does not belong to this question.'], 422);
+        }
+
+        if ($option->image_path) {
+            $this->imageService->delete($option->image_path);
+            $option->update(['image_path' => null]);
         }
 
         return response()->json(['message' => 'Image removed']);

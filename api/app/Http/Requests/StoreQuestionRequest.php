@@ -27,6 +27,7 @@ class StoreQuestionRequest extends FormRequest
             'options.*.label' => ['required_with:options', 'string', 'size:1'],
             'options.*.text' => ['required_with:options', 'string'],
             'options.*.is_correct' => ['required_with:options', 'boolean'],
+            'options.*.image_path' => ['nullable', 'string'],
         ];
     }
 

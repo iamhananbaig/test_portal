@@ -23,6 +23,8 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/questions/{question}/status', [QuestionController::class, 'toggleStatus']);
     Route::post('/questions/{question}/image', [QuestionController::class, 'uploadImage']);
     Route::delete('/questions/{question}/image', [QuestionController::class, 'destroyImage']);
+    Route::post('/questions/{question}/options/{option}/image', [QuestionController::class, 'uploadOptionImage']);
+    Route::delete('/questions/{question}/options/{option}/image', [QuestionController::class, 'destroyOptionImage']);
 
     Route::post('/tests/generate', [TestController::class, 'generate']);
     Route::get('/tests', [TestController::class, 'index']);

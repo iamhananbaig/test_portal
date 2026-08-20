@@ -27,6 +27,7 @@ interface DescriptiveQuestion {
   category: string
   display_order: number
   descriptive_answer: string | null
+  answer_image_path: string | null
   awarded_marks: number | null
 }
 
@@ -190,12 +191,21 @@ export default function MarkingDetail() {
             <CardContent>
               <p className="text-slate-900 dark:text-slate-100">{question.text}</p>
 
-              {question.descriptive_answer ? (
+              {question.descriptive_answer || question.answer_image_path ? (
                 <div className="mt-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 p-4">
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Candidate Answer:</p>
-                  <p className="mt-1 whitespace-pre-wrap text-slate-900 dark:text-slate-100">
-                    {question.descriptive_answer}
-                  </p>
+                  {question.descriptive_answer && (
+                    <p className="mt-1 whitespace-pre-wrap text-slate-900 dark:text-slate-100">
+                      {question.descriptive_answer}
+                    </p>
+                  )}
+                  {question.answer_image_path && (
+                    <img
+                      src={`/storage/${question.answer_image_path}`}
+                      alt="Answer attachment"
+                      className="mt-2 max-h-48 rounded-lg border border-slate-200 dark:border-slate-700"
+                    />
+                  )}
                 </div>
               ) : (
                 <p className="mt-3 text-sm text-slate-400 dark:text-slate-500">No answer submitted.</p>

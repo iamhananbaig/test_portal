@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Flag, AlertTriangle, Sun, Moon, Menu, X } from 'lucide-react'
+import { Flag, AlertTriangle, Sun, Moon, Menu, X, ImageIcon } from 'lucide-react'
 import { candidateApi } from '../../services/api'
 import { useTheme } from '../../context/ThemeContext'
 import Button from '../../components/ui/Button'
@@ -26,6 +26,7 @@ interface Question {
   options: QuestionOption[]
   selected_option_id: number | null
   descriptive_answer: string | null
+  answer_image_path: string | null
   is_flagged: boolean
 }
 
@@ -50,6 +51,8 @@ export default function CandidateTest() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [pendingImagePreview, setPendingImagePreview] = useState<string | null>(null)
+  const answerImageRef = useRef<HTMLInputElement>(null)
 
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -58,6 +61,7 @@ export default function CandidateTest() {
     questionId: number
     selectedOptionId: number | null
     descriptiveAnswer: string | null
+    answerImage: File | null
   } | null>(null)
 
   useEffect(() => {
@@ -167,14 +171,26 @@ export default function CandidateTest() {
   }
 
   const saveAnswer = useCallback(
-    async (questionId: number, selectedOptionId: number | null, descriptiveAnswer: string | null) => {
+    async (questionId: number, selectedOptionId: number | null, descriptiveAnswer: string | null, answerImage: File | null = null) => {
       setSaveStatus('saving')
       try {
-        await candidateApi.put(`/candidate/${testId}/answer`, {
-          question_id: questionId,
-          selected_option_id: selectedOptionId,
-          descriptive_answer: descriptiveAnswer,
-        })
+        const hasImage = answerImage instanceof File
+        if (hasImage) {
+          const formData = new FormData()
+          formData.append('question_id', String(questionId))
+          if (selectedOptionId) formData.append('selected_option_id', String(selectedOptionId))
+          if (descriptiveAnswer) formData.append('descriptive_answer', descriptiveAnswer)
+          formData.append('answer_image', answerImage)
+          await candidateApi.put(`/candidate/${testId}/answer`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          })
+        } else {
+          await candidateApi.put(`/candidate/${testId}/answer`, {
+            question_id: questionId,
+            selected_option_id: selectedOptionId,
+            descriptive_answer: descriptiveAnswer,
+          })
+        }
 
         setSaveStatus('saved')
         setData((prev) => {
@@ -224,10 +240,10 @@ export default function CandidateTest() {
       }
 
       autosaveTimerRef.current = setTimeout(() => {
-        saveAnswer(questionId, selectedOptionId, descriptiveAnswer)
+        saveAnswer(questionId, selectedOptionId, descriptiveAnswer, lastAnswerRef.current?.answerImage ?? null)
       }, 1000)
 
-      lastAnswerRef.current = { questionId, selectedOptionId, descriptiveAnswer }
+      lastAnswerRef.current = { questionId, selectedOptionId, descriptiveAnswer, answerImage: lastAnswerRef.current?.answerImage ?? null }
     },
     [saveAnswer],
   )
@@ -260,8 +276,8 @@ export default function CandidateTest() {
       }
 
       if (lastAnswerRef.current) {
-        const { questionId, selectedOptionId, descriptiveAnswer } = lastAnswerRef.current
-        await saveAnswer(questionId, selectedOptionId, descriptiveAnswer)
+        const { questionId, selectedOptionId, descriptiveAnswer, answerImage } = lastAnswerRef.current
+        await saveAnswer(questionId, selectedOptionId, descriptiveAnswer, answerImage)
       }
 
       await candidateApi.post(`/candidate/${testId}/submit`)
@@ -277,6 +293,45 @@ export default function CandidateTest() {
     } finally {
       setSubmitting(false)
       setShowSubmitConfirm(false)
+    }
+  }
+
+  const handleAnswerImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !currentQuestion) return
+
+    const previewUrl = URL.createObjectURL(file)
+    setPendingImagePreview(previewUrl)
+
+    if (lastAnswerRef.current) {
+      lastAnswerRef.current = { ...lastAnswerRef.current, answerImage: file }
+    }
+
+    setSaveStatus('unsaved')
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current)
+    }
+    autosaveTimerRef.current = setTimeout(() => {
+      saveAnswer(
+        currentQuestion.id,
+        currentQuestion.selected_option_id,
+        currentQuestion.descriptive_answer,
+        file,
+      )
+    }, 1000)
+
+    if (answerImageRef.current) answerImageRef.current.value = ''
+  }
+
+  const handleAnswerImageRemove = () => {
+    setPendingImageFile(null)
+    if (pendingImagePreview) {
+      URL.revokeObjectURL(pendingImagePreview)
+    }
+    setPendingImagePreview(null)
+
+    if (lastAnswerRef.current) {
+      lastAnswerRef.current = { ...lastAnswerRef.current, answerImage: null }
     }
   }
 
@@ -563,6 +618,40 @@ export default function CandidateTest() {
                   rows={8}
                   className="w-full border-0 focus:ring-0 resize-y text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
+                <div className="mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
+                  <input
+                    ref={answerImageRef}
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={handleAnswerImageSelect}
+                    className="hidden"
+                  />
+                  {(pendingImagePreview || currentQuestion.answer_image_path) ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={pendingImagePreview || `/storage/${currentQuestion.answer_image_path}`}
+                        alt="Answer attachment"
+                        className="max-h-32 rounded-lg border border-slate-200 dark:border-slate-700"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAnswerImageRemove}
+                        className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 hover:bg-rose-600 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => answerImageRef.current?.click()}
+                      className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                      Attach image
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 

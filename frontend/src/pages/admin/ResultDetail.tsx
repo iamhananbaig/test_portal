@@ -53,6 +53,7 @@ interface Question {
   options: QuestionOption[]
   selected_option_id: number | null
   descriptive_answer: string | null
+  answer_image_path: string | null
   awarded_marks: number | null
 }
 
@@ -311,9 +312,21 @@ export default function ResultDetail() {
                     {question.type === 'descriptive' && (
                       <div className="mt-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 p-3">
                         <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Answer:</p>
-                        <p className="mt-1 whitespace-pre-wrap text-slate-900 dark:text-slate-100">
-                          {question.descriptive_answer || 'No answer submitted'}
-                        </p>
+                        {question.descriptive_answer && (
+                          <p className="mt-1 whitespace-pre-wrap text-slate-900 dark:text-slate-100">
+                            {question.descriptive_answer}
+                          </p>
+                        )}
+                        {question.answer_image_path && (
+                          <img
+                            src={`/storage/${question.answer_image_path}`}
+                            alt="Answer attachment"
+                            className="mt-2 max-h-48 rounded-lg border border-slate-200 dark:border-slate-700"
+                          />
+                        )}
+                        {!question.descriptive_answer && !question.answer_image_path && (
+                          <p className="mt-1 text-slate-500 dark:text-slate-400">No answer submitted</p>
+                        )}
                       </div>
                     )}
                   </div>

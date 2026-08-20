@@ -66,6 +66,7 @@ class ResultController extends Controller
                 ]),
                 'selected_option_id' => $answer?->selected_option_id,
                 'descriptive_answer' => $answer?->descriptive_answer,
+                'answer_image_path' => $answer?->answer_image_path,
                 'awarded_marks' => $answer?->awarded_marks !== null ? (float) $answer->awarded_marks : null,
             ];
         });
