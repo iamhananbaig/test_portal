@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
+import { HelpCircle, Plus } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import Badge from '../../components/ui/Badge'
 import Card, { CardContent } from '../../components/ui/Card'
+import Table, { TableRow, TableCell } from '../../components/ui/Table'
+import Pagination from '../../components/ui/Pagination'
+import Spinner from '../../components/ui/Spinner'
+import EmptyState from '../../components/ui/EmptyState'
+import PageHeader from '../../components/ui/PageHeader'
 import { useDebounce } from '../../hooks/useDebounce'
 
 interface Category {
@@ -81,14 +87,18 @@ export default function QuestionBank() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Question Bank</h1>
-        <Button onClick={() => navigate('/admin/questions/new')}>Add Question</Button>
-      </div>
+      <PageHeader
+        title="Question Bank"
+        action={
+          <Button onClick={() => navigate('/admin/questions/new')} icon={<Plus className="h-4 w-4" />}>
+            Add Question
+          </Button>
+        }
+      />
 
       <Card className="mt-6">
         <CardContent>
-          <div className="mb-4 grid grid-cols-4 gap-4">
+          <div className="mb-4 grid grid-cols-2 md:grid-cols-4 gap-4">
             <Select
               label="Category"
               value={filters.category_id}
@@ -124,67 +134,56 @@ export default function QuestionBank() {
           </div>
 
           {loading ? (
-            <p className="py-8 text-center text-gray-500">Loading...</p>
+            <div className="py-12 flex justify-center"><Spinner /></div>
           ) : questions.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">No questions found.</p>
+            <EmptyState
+              icon={HelpCircle}
+              message="No questions found"
+              description="Get started by adding your first question."
+              action={<Button onClick={() => navigate('/admin/questions/new')} size="sm">Add Question</Button>}
+            />
           ) : (
             <>
-              <table className="w-full text-left text-sm">
-                <caption className="sr-only">Questions list</caption>
-                <thead>
-                  <tr className="border-b border-gray-200 text-gray-600">
-                    <th scope="col" className="pb-3 font-medium">Category</th>
-                    <th scope="col" className="pb-3 font-medium">Type</th>
-                    <th scope="col" className="pb-3 font-medium">Question</th>
-                    <th scope="col" className="pb-3 font-medium">Marks</th>
-                    <th scope="col" className="pb-3 font-medium">Status</th>
-                    <th scope="col" className="pb-3 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {questions.map((q) => (
-                    <tr key={q.id} className="border-b border-gray-100 last:border-0">
-                      <td className="py-3 text-gray-600">{q.category?.name}</td>
-                      <td className="py-3">
-                        <Badge variant={q.type === 'mcq' ? 'info' : 'warning'}>
-                          {q.type === 'mcq' ? 'MCQ' : 'Descriptive'}
-                        </Badge>
-                      </td>
-                      <td className="max-w-xs truncate py-3 text-gray-900">{q.text}</td>
-                      <td className="py-3 text-gray-600">{q.marks}</td>
-                      <td className="py-3">
-                        <Badge variant={q.is_active ? 'success' : 'gray'}>
-                          {q.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </td>
-                      <td className="py-3">
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/questions/${q.id}/edit`)}>
-                            Edit
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => toggleStatus(q)}>
-                            {q.is_active ? 'Deactivate' : 'Activate'}
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-gray-500">
-                  Page {page} of {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                    Previous
-                  </Button>
-                  <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                    Next
-                  </Button>
-                </div>
-              </div>
+              <Table
+                columns={[
+                  { key: 'category', header: 'Category' },
+                  { key: 'type', header: 'Type' },
+                  { key: 'text', header: 'Question' },
+                  { key: 'marks', header: 'Marks' },
+                  { key: 'status', header: 'Status' },
+                  { key: 'actions', header: 'Actions', className: 'text-right' },
+                ]}
+                caption="Questions list"
+              >
+                {questions.map((q) => (
+                  <TableRow key={q.id}>
+                    <TableCell>{q.category?.name}</TableCell>
+                    <TableCell>
+                      <Badge variant={q.type === 'mcq' ? 'info' : 'warning'}>
+                        {q.type === 'mcq' ? 'MCQ' : 'Descriptive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">{q.text}</TableCell>
+                    <TableCell>{q.marks}</TableCell>
+                    <TableCell>
+                      <Badge variant={q.is_active ? 'success' : 'gray'}>
+                        {q.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/questions/${q.id}/edit`)}>
+                          Edit
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => toggleStatus(q)}>
+                          {q.is_active ? 'Deactivate' : 'Activate'}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </Table>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </>
           )}
         </CardContent>

@@ -35,6 +35,9 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600">
+            <span className="text-xl font-bold text-white">T</span>
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">Test Portal</h1>
           <p className="mt-2 text-sm text-gray-600">Admin Login</p>
         </div>
@@ -58,8 +61,8 @@ export default function Login() {
             required
             autoComplete="current-password"
           />
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <Button type="submit" className="w-full" loading={loading}>
+            Sign In
           </Button>
         </form>
       </div>

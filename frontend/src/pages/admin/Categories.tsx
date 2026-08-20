@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react'
+import { FolderOpen } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
-import Badge from '../../components/ui/Badge'
 import Card, { CardContent } from '../../components/ui/Card'
+import Table, { TableRow, TableCell } from '../../components/ui/Table'
 import Modal from '../../components/ui/Modal'
+import Spinner from '../../components/ui/Spinner'
+import EmptyState from '../../components/ui/EmptyState'
+import Toast from '../../components/ui/Toast'
+import PageHeader from '../../components/ui/PageHeader'
+import Badge from '../../components/ui/Badge'
 
 interface Category {
   id: number
@@ -20,6 +26,7 @@ export default function Categories() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   const fetchCategories = async () => {
     try {
@@ -51,11 +58,15 @@ export default function Categories() {
     try {
       if (editingCategory) {
         await api.put(`/categories/${editingCategory.id}`, { name })
+        setToast({ message: 'Category updated.', type: 'success' })
       } else {
         await api.post('/categories', { name })
+        setToast({ message: 'Category created.', type: 'success' })
       }
       setModalOpen(false)
       fetchCategories()
+    } catch {
+      setToast({ message: 'Failed to save category.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -63,60 +74,61 @@ export default function Categories() {
 
   const toggleActive = async (cat: Category) => {
     await api.put(`/categories/${cat.id}`, { is_active: !cat.is_active })
+    setToast({ message: `Category ${cat.is_active ? 'deactivated' : 'activated'}.`, type: 'success' })
     fetchCategories()
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-        <Button onClick={openCreate}>Add Category</Button>
-      </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      <PageHeader
+        title="Categories"
+        action={<Button onClick={openCreate}>Add Category</Button>}
+      />
 
       <Card className="mt-6">
         <CardContent>
           {loading ? (
-            <p className="py-8 text-center text-gray-500">Loading...</p>
+            <div className="py-12 flex justify-center"><Spinner /></div>
           ) : categories.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">No categories found.</p>
+            <EmptyState
+              icon={FolderOpen}
+              message="No categories found"
+              description="Create your first category to organize questions."
+              action={<Button onClick={openCreate} size="sm">Add Category</Button>}
+            />
           ) : (
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 text-gray-600">
-                  <th className="pb-3 font-medium">Name</th>
-                  <th className="pb-3 font-medium">Questions</th>
-                  <th className="pb-3 font-medium">Status</th>
-                  <th className="pb-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((cat) => (
-                  <tr key={cat.id} className="border-b border-gray-100 last:border-0">
-                    <td className="py-3 font-medium text-gray-900">{cat.name}</td>
-                    <td className="py-3 text-gray-600">{cat.questions_count}</td>
-                    <td className="py-3">
-                      <Badge variant={cat.is_active ? 'success' : 'gray'}>
-                        {cat.is_active ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </td>
-                    <td className="py-3">
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(cat)}>
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleActive(cat)}
-                        >
-                          {cat.is_active ? 'Deactivate' : 'Activate'}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Table
+              columns={[
+                { key: 'name', header: 'Name' },
+                { key: 'questions', header: 'Questions' },
+                { key: 'status', header: 'Status' },
+                { key: 'actions', header: 'Actions' },
+              ]}
+            >
+              {categories.map((cat) => (
+                <TableRow key={cat.id}>
+                  <TableCell className="font-medium text-gray-900">{cat.name}</TableCell>
+                  <TableCell>{cat.questions_count}</TableCell>
+                  <TableCell>
+                    <Badge variant={cat.is_active ? 'success' : 'gray'}>
+                      {cat.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(cat)}>
+                        Edit
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => toggleActive(cat)}>
+                        {cat.is_active ? 'Deactivate' : 'Activate'}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </Table>
           )}
         </CardContent>
       </Card>
@@ -125,23 +137,23 @@ export default function Categories() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editingCategory ? 'Edit Category' : 'Add Category'}
-      >
-        <div className="space-y-4">
-          <Input
-            label="Category Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Accounting"
-          />
-          <div className="flex justify-end gap-2">
+        footer={
+          <>
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving || !name.trim()}>
-              {saving ? 'Saving...' : 'Save'}
+            <Button onClick={handleSave} loading={saving} disabled={!name.trim()}>
+              Save
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      >
+        <Input
+          label="Category Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Accounting"
+        />
       </Modal>
     </div>
   )

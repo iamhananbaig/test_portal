@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
+import { ClipboardCopy, CheckCircle } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import Card, { CardContent } from '../../components/ui/Card'
 import Modal from '../../components/ui/Modal'
+import PageHeader from '../../components/ui/PageHeader'
 import { formatTime } from '../../utils/dates'
 
 interface Category {
@@ -32,6 +34,7 @@ export default function TestCreate() {
   const [successModal, setSuccessModal] = useState(false)
   const [generatedTestId, setGeneratedTestId] = useState('')
   const [generatedExpiry, setGeneratedExpiry] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -94,6 +97,8 @@ export default function TestCreate() {
 
   const copyTestId = () => {
     navigator.clipboard.writeText(generatedTestId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const availableCategories = (excludeIndex: number) => {
@@ -106,7 +111,7 @@ export default function TestCreate() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Create Test</h1>
+      <PageHeader title="Create Test" />
 
       <Card className="mt-6">
         <CardContent>
@@ -115,7 +120,7 @@ export default function TestCreate() {
           )}
 
           <h2 className="mb-4 text-sm font-medium text-gray-700">Candidate Information</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Candidate Name"
               value={candidateName}
@@ -181,8 +186,8 @@ export default function TestCreate() {
             <Button variant="secondary" onClick={() => navigate('/admin/tests')}>
               Cancel
             </Button>
-            <Button onClick={handleGenerate} disabled={saving || !candidateName || !candidateCnic}>
-              {saving ? 'Generating...' : 'Generate Test'}
+            <Button onClick={handleGenerate} loading={saving} disabled={!candidateName || !candidateCnic}>
+              Generate Test
             </Button>
           </div>
         </CardContent>
@@ -191,6 +196,7 @@ export default function TestCreate() {
       <Modal open={successModal} onClose={() => { setSuccessModal(false); navigate('/admin/tests') }} title="Test Generated">
         <div className="space-y-4">
           <div className="rounded-lg bg-green-50 p-4 text-center">
+            <CheckCircle className="mx-auto h-8 w-8 text-green-600 mb-2" />
             <p className="text-sm text-gray-600">Candidate</p>
             <p className="font-semibold text-gray-900">{candidateName}</p>
           </div>
@@ -202,8 +208,8 @@ export default function TestCreate() {
             Valid until: {formatTime(generatedExpiry)}
           </div>
           <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1" onClick={copyTestId}>
-              Copy Test ID
+            <Button variant="secondary" className="flex-1" onClick={copyTestId} icon={copied ? <CheckCircle className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}>
+              {copied ? 'Copied!' : 'Copy Test ID'}
             </Button>
             <Button className="flex-1" onClick={() => { setSuccessModal(false); navigate('/admin/tests') }}>
               Done

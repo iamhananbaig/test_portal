@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { ArrowLeft } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
+import Textarea from '../../components/ui/Textarea'
 import Card, { CardContent } from '../../components/ui/Card'
+import Spinner from '../../components/ui/Spinner'
+import PageHeader from '../../components/ui/PageHeader'
 
 interface Category {
   id: number
@@ -103,15 +107,22 @@ export default function QuestionForm() {
     }
   }
 
-  if (loading) return <p className="py-8 text-center text-gray-500">Loading...</p>
+  if (loading) return <div className="py-12 flex justify-center"><Spinner /></div>
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">{isEditing ? 'Edit Question' : 'Add Question'}</h1>
+      <PageHeader
+        title={isEditing ? 'Edit Question' : 'Add Question'}
+        action={
+          <Button variant="secondary" onClick={() => navigate('/admin/questions')} icon={<ArrowLeft className="h-4 w-4" />}>
+            Back
+          </Button>
+        }
+      />
       <Card className="mt-6">
         <CardContent>
           {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
               label="Category"
               value={categoryId}
@@ -130,12 +141,11 @@ export default function QuestionForm() {
             />
           </div>
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700">Question Text</label>
-            <textarea
+            <Textarea
+              label="Question Text"
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={4}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               placeholder="Enter question text..."
             />
           </div>
@@ -169,7 +179,7 @@ export default function QuestionForm() {
                       type="text"
                       value={opt.text}
                       onChange={(e) => updateOptionText(i, e.target.value)}
-                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       placeholder={`Option ${opt.label}`}
                     />
                   </div>
@@ -181,8 +191,8 @@ export default function QuestionForm() {
             <Button variant="secondary" onClick={() => navigate('/admin/questions')}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving || !categoryId || !text.trim() || !marks}>
-              {saving ? 'Saving...' : 'Save Question'}
+            <Button onClick={handleSave} loading={saving} disabled={!categoryId || !text.trim() || !marks}>
+              Save Question
             </Button>
           </div>
         </CardContent>

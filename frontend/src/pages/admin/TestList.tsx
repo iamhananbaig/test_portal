@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
+import { FileText, Plus } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
-import Badge from '../../components/ui/Badge'
 import Card, { CardContent } from '../../components/ui/Card'
+import Table, { TableRow, TableCell } from '../../components/ui/Table'
+import Pagination from '../../components/ui/Pagination'
+import Spinner from '../../components/ui/Spinner'
+import EmptyState from '../../components/ui/EmptyState'
+import PageHeader from '../../components/ui/PageHeader'
+import StatusBadge from '../../components/ui/StatusBadge'
 import { useDebounce } from '../../hooks/useDebounce'
 import { formatDateTime } from '../../utils/dates'
 
@@ -19,16 +25,6 @@ interface Test {
   status: string
   created_at: string
   expires_at: string | null
-}
-
-const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'gray'> = {
-  ready: 'info',
-  expired: 'danger',
-  in_progress: 'warning',
-  submitted: 'warning',
-  auto_submitted: 'warning',
-  pending_review: 'warning',
-  completed: 'success',
 }
 
 export default function TestList() {
@@ -59,20 +55,20 @@ export default function TestList() {
     fetchTests()
   }, [filters.status, debouncedSearch, page])
 
-  const formatStatus = (status: string) => {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-  }
-
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Tests</h1>
-        <Button onClick={() => navigate('/admin/tests/new')}>Create Test</Button>
-      </div>
+      <PageHeader
+        title="Tests"
+        action={
+          <Button onClick={() => navigate('/admin/tests/new')} icon={<Plus className="h-4 w-4" />}>
+            Create Test
+          </Button>
+        }
+      />
 
       <Card className="mt-6">
         <CardContent>
-          <div className="mb-4 grid grid-cols-3 gap-4">
+          <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select
               label="Status"
               value={filters.status}
@@ -87,7 +83,7 @@ export default function TestList() {
                 { value: 'completed', label: 'Completed' },
               ]}
             />
-            <div className="col-span-2">
+            <div className="md:col-span-2">
               <Input
                 label="Search"
                 placeholder="Search by name, CNIC, or Test ID..."
@@ -98,58 +94,43 @@ export default function TestList() {
           </div>
 
           {loading ? (
-            <p className="py-8 text-center text-gray-500">Loading...</p>
+            <div className="py-12 flex justify-center"><Spinner /></div>
           ) : tests.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">No tests found.</p>
+            <EmptyState
+              icon={FileText}
+              message="No tests found"
+              description="Create your first test to get started."
+              action={<Button onClick={() => navigate('/admin/tests/new')} size="sm">Create Test</Button>}
+            />
           ) : (
             <>
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 text-gray-600">
-                    <th className="pb-3 font-medium">Candidate</th>
-                    <th className="pb-3 font-medium">Test ID</th>
-                    <th className="pb-3 font-medium">Created</th>
-                    <th className="pb-3 font-medium">Valid Until</th>
-                    <th className="pb-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tests.map((test) => (
-                    <tr key={test.id} className="border-b border-gray-100 last:border-0">
-                      <td className="py-3">
-                        <p className="font-medium text-gray-900">{test.candidate_name}</p>
-                        <p className="text-xs text-gray-500">{test.candidate_cnic}</p>
-                      </td>
-                      <td className="py-3 font-mono text-sm font-semibold text-gray-900">{test.test_id}</td>
-                      <td className="py-3 text-gray-600">
-                        {formatDateTime(test.created_at)}
-                      </td>
-                      <td className="py-3 text-gray-600">
-                        {test.expires_at ? formatDateTime(test.expires_at) : '—'}
-                      </td>
-                      <td className="py-3">
-                        <Badge variant={statusVariant[test.status] || 'gray'}>
-                          {formatStatus(test.status)}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-gray-500">
-                  Page {page} of {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                    Previous
-                  </Button>
-                  <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                    Next
-                  </Button>
-                </div>
-              </div>
+              <Table
+                columns={[
+                  { key: 'candidate', header: 'Candidate' },
+                  { key: 'test_id', header: 'Test ID' },
+                  { key: 'created', header: 'Created' },
+                  { key: 'expires', header: 'Valid Until' },
+                  { key: 'status', header: 'Status' },
+                ]}
+              >
+                {tests.map((test) => (
+                  <TableRow key={test.id}>
+                    <TableCell>
+                      <p className="font-medium text-gray-900">{test.candidate_name}</p>
+                      <p className="text-xs text-gray-500">{test.candidate_cnic}</p>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm font-semibold text-gray-900">{test.test_id}</span>
+                    </TableCell>
+                    <TableCell>{formatDateTime(test.created_at)}</TableCell>
+                    <TableCell>{test.expires_at ? formatDateTime(test.expires_at) : '—'}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={test.status} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </Table>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </>
           )}
         </CardContent>

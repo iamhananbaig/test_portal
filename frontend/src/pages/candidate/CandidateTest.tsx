@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { Flag, AlertTriangle } from 'lucide-react'
 import Button from '../../components/ui/Button'
+import Modal from '../../components/ui/Modal'
+import Spinner from '../../components/ui/Spinner'
 
 interface QuestionOption {
   id: number
@@ -288,7 +291,10 @@ export default function CandidateTest() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-500">Loading test...</div>
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-sm text-gray-500">Loading test...</p>
+        </div>
       </div>
     )
   }
@@ -297,6 +303,7 @@ export default function CandidateTest() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
+          <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
           <p className="text-red-600 mb-4">{error}</p>
           <Button onClick={() => navigate('/candidate')}>Back to Login</Button>
         </div>
@@ -308,15 +315,14 @@ export default function CandidateTest() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-4">
           <span className="font-semibold text-gray-900">{data.candidate_name}</span>
           <span className="text-sm text-gray-500 font-mono">{data.test_id}</span>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className={`text-sm font-medium px-3 py-1 rounded-lg ${isWarning ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+          <div className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${isWarning ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-gray-100 text-gray-700'}`}>
             Time: {formatTime(remainingSeconds)}
           </div>
 
@@ -333,7 +339,6 @@ export default function CandidateTest() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         <aside className="w-64 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0 p-4 hidden md:block">
           <div className="mb-4">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
@@ -349,22 +354,24 @@ export default function CandidateTest() {
                 <button
                   key={q.id}
                   onClick={() => goToQuestion(i)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
                     isCurrent
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-blue-600 text-white shadow-sm'
                       : isAnswered
                         ? 'bg-green-50 text-green-700 hover:bg-green-100'
                         : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full text-xs font-medium bg-current/10">
+                  <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-medium ${
+                    isCurrent ? 'bg-white/20' : 'bg-gray-200/60'
+                  }`}>
                     {i + 1}
                   </span>
                   <span className="truncate flex-1 text-left">
                     {q.text.substring(0, 50)}{q.text.length > 50 ? '...' : ''}
                   </span>
                   {q.is_flagged && (
-                    <span className="text-amber-500">⚑</span>
+                    <Flag className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
                   )}
                 </button>
               )
@@ -381,18 +388,17 @@ export default function CandidateTest() {
               Unanswered
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="text-amber-500">⚑</span>
+              <Flag className="h-3.5 w-3.5 text-amber-500" />
               Flagged
             </div>
           </div>
         </aside>
 
-        {/* Main */}
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-0.5 rounded">
+                <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
                   {currentQuestion.category}
                 </span>
                 <span className="text-sm text-gray-500">
@@ -405,14 +411,14 @@ export default function CandidateTest() {
 
               <button
                 onClick={() => handleFlag(currentQuestion.id)}
-                className={`p-2 rounded-lg transition-colors ${currentQuestion.is_flagged ? 'text-amber-500 bg-amber-50' : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                className={`p-2 rounded-lg transition-all duration-150 ${currentQuestion.is_flagged ? 'text-amber-500 bg-amber-50' : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'}`}
                 title={currentQuestion.is_flagged ? 'Remove flag' : 'Flag for review'}
               >
-                ⚑
+                <Flag className={`h-5 w-5 ${currentQuestion.is_flagged ? 'fill-amber-500' : ''}`} />
               </button>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6 shadow-sm">
               <p className="text-gray-900 text-base leading-relaxed whitespace-pre-wrap">
                 {currentQuestion.text}
               </p>
@@ -430,10 +436,10 @@ export default function CandidateTest() {
                 {currentQuestion.options.map((option) => (
                   <label
                     key={option.id}
-                    className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-150 ${
                       currentQuestion.selected_option_id === option.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? 'border-blue-500 bg-blue-50 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-sm'
                     }`}
                   >
                     <input
@@ -454,7 +460,7 @@ export default function CandidateTest() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                 <textarea
                   value={currentQuestion.descriptive_answer || ''}
                   onChange={(e) => handleAnswerChange(currentQuestion.id, null, e.target.value)}
@@ -474,7 +480,6 @@ export default function CandidateTest() {
                 Previous
               </Button>
 
-              {/* Mobile sidebar toggle */}
               <div className="md:hidden">
                 <select
                   value={currentIndex}
@@ -483,7 +488,7 @@ export default function CandidateTest() {
                 >
                   {data.questions.map((q, i) => (
                     <option key={q.id} value={i}>
-                      Q{i + 1} {q.is_flagged ? '⚑' : ''} {q.selected_option_id || q.descriptive_answer ? '✓' : ''}
+                      Q{i + 1} {q.is_flagged ? '(flagged)' : ''} {q.selected_option_id || q.descriptive_answer ? '(answered)' : ''}
                     </option>
                   ))}
                 </select>
@@ -504,29 +509,30 @@ export default function CandidateTest() {
         </main>
       </div>
 
-      {/* Submit Confirmation Modal */}
-      {showSubmitConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Submit Test?</h2>
-            <p className="text-gray-600 mb-4">
-              You have answered {answeredCount} of {data.questions.length} questions.
-              {flaggedCount > 0 && ` ${flaggedCount} questions are flagged for review.`}
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              Once submitted, you cannot go back to change your answers.
-            </p>
-            <div className="flex gap-3">
-              <Button variant="secondary" onClick={() => setShowSubmitConfirm(false)} className="flex-1" disabled={submitting}>
-                Cancel
-              </Button>
-              <Button variant="danger" onClick={handleSubmit} className="flex-1" disabled={submitting}>
-                {submitting ? 'Submitting...' : 'Submit'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showSubmitConfirm}
+        onClose={() => !submitting && setShowSubmitConfirm(false)}
+        title="Submit Test?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowSubmitConfirm(false)} className="flex-1" disabled={submitting}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleSubmit} className="flex-1" loading={submitting}>
+              Submit
+            </Button>
+          </>
+        }
+      >
+        <p className="text-gray-600 mb-2">
+          You have answered {answeredCount} of {data.questions.length} questions.
+          {flaggedCount > 0 && ` ${flaggedCount} questions are flagged for review.`}
+        </p>
+        <p className="text-sm text-gray-500">
+          Once submitted, you cannot go back to change your answers.
+        </p>
+      </Modal>
     </div>
   )
 }

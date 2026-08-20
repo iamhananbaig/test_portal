@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
+import { PenLine } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Card, { CardContent } from '../../components/ui/Card'
-import Badge from '../../components/ui/Badge'
+import Table, { TableRow, TableCell } from '../../components/ui/Table'
+import Pagination from '../../components/ui/Pagination'
+import Spinner from '../../components/ui/Spinner'
+import EmptyState from '../../components/ui/EmptyState'
+import PageHeader from '../../components/ui/PageHeader'
 import { formatDateTime } from '../../utils/dates'
 
 interface Test {
@@ -41,66 +46,55 @@ export default function Marking() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Marking Queue</h1>
-      <p className="mt-1 text-sm text-gray-500">Tests pending review with descriptive questions</p>
+      <PageHeader title="Marking Queue" description="Tests pending review with descriptive questions" />
 
       <Card className="mt-6">
         <CardContent>
           {loading ? (
-            <p className="py-8 text-center text-gray-500">Loading...</p>
+            <div className="py-12 flex justify-center"><Spinner /></div>
           ) : tests.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">No tests pending review.</p>
+            <EmptyState
+              icon={PenLine}
+              message="No tests pending review"
+              description="All tests have been marked."
+            />
           ) : (
             <>
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 text-gray-600">
-                    <th className="pb-3 font-medium">Candidate</th>
-                    <th className="pb-3 font-medium">Test ID</th>
-                    <th className="pb-3 font-medium">Total Marks</th>
-                    <th className="pb-3 font-medium">Submitted</th>
-                    <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tests.map((test) => (
-                    <tr key={test.id} className="border-b border-gray-100 last:border-0">
-                      <td className="py-3">
-                        <p className="font-medium text-gray-900">{test.candidate_name}</p>
-                        <p className="text-xs text-gray-500">{test.candidate_cnic}</p>
-                      </td>
-                      <td className="py-3 font-mono text-sm font-semibold text-gray-900">{test.test_id}</td>
-                      <td className="py-3 text-gray-600">{test.total_marks}</td>
-                      <td className="py-3 text-gray-600">
-                        {test.submitted_at ? formatDateTime(test.submitted_at) : '—'}
-                      </td>
-                      <td className="py-3">
-                        <Badge variant="warning">Pending Review</Badge>
-                      </td>
-                      <td className="py-3 text-right">
-                        <Button size="sm" onClick={() => navigate(`/admin/marking/${test.id}`)}>
-                          Mark
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-gray-500">
-                  Page {page} of {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                    Previous
-                  </Button>
-                  <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                    Next
-                  </Button>
-                </div>
-              </div>
+              <Table
+                columns={[
+                  { key: 'candidate', header: 'Candidate' },
+                  { key: 'test_id', header: 'Test ID' },
+                  { key: 'marks', header: 'Total Marks' },
+                  { key: 'submitted', header: 'Submitted' },
+                  { key: 'status', header: 'Status' },
+                  { key: 'action', header: '', className: 'text-right' },
+                ]}
+              >
+                {tests.map((test) => (
+                  <TableRow key={test.id}>
+                    <TableCell>
+                      <p className="font-medium text-gray-900">{test.candidate_name}</p>
+                      <p className="text-xs text-gray-500">{test.candidate_cnic}</p>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm font-semibold text-gray-900">{test.test_id}</span>
+                    </TableCell>
+                    <TableCell>{test.total_marks}</TableCell>
+                    <TableCell>{test.submitted_at ? formatDateTime(test.submitted_at) : '—'}</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                        Pending Review
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" onClick={() => navigate(`/admin/marking/${test.id}`)}>
+                        Mark
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </Table>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </>
           )}
         </CardContent>

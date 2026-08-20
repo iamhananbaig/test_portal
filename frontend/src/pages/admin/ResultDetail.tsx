@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
+import { ArrowLeft } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Card, { CardContent, CardHeader } from '../../components/ui/Card'
-import Badge from '../../components/ui/Badge'
+import Spinner from '../../components/ui/Spinner'
+import StatusBadge from '../../components/ui/StatusBadge'
+import PageHeader from '../../components/ui/PageHeader'
 import { formatDateTime } from '../../utils/dates'
 
 interface TestInfo {
@@ -53,6 +56,10 @@ interface Question {
   awarded_marks: number | null
 }
 
+function formatStatusLabel(status: string): string {
+  return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+}
+
 export default function ResultDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -79,17 +86,8 @@ export default function ResultDetail() {
     fetchData()
   }, [id])
 
-  const formatStatus = (status: string) => {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-  }
-
-  const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'gray'> = {
-    completed: 'success',
-    pending_review: 'warning',
-  }
-
   if (loading) {
-    return <p className="py-8 text-center text-gray-500">Loading...</p>
+    return <div className="py-12 flex justify-center"><Spinner /></div>
   }
 
   if (!testInfo) {
@@ -102,20 +100,17 @@ export default function ResultDetail() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Result: {testInfo.test_id}</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            {testInfo.candidate_name} — {testInfo.candidate_cnic}
-          </p>
-        </div>
-        <Button variant="secondary" onClick={() => navigate('/admin/results')}>
-          Back to Results
-        </Button>
-      </div>
+      <PageHeader
+        title={`Result: ${testInfo.test_id}`}
+        description={`${testInfo.candidate_name} — ${testInfo.candidate_cnic}`}
+        action={
+          <Button variant="secondary" onClick={() => navigate('/admin/results')} icon={<ArrowLeft className="h-4 w-4" />}>
+            Back to Results
+          </Button>
+        }
+      />
 
-      {/* Candidate Info + Score */}
-      <div className="mt-6 grid grid-cols-3 gap-4">
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
             <h2 className="text-sm font-medium text-gray-500">Candidate Info</h2>
@@ -137,9 +132,7 @@ export default function ResultDetail() {
               <div className="flex justify-between">
                 <dt className="text-gray-500">Status</dt>
                 <dd>
-                  <Badge variant={statusVariant[testInfo.status] || 'gray'}>
-                    {formatStatus(testInfo.status)}
-                  </Badge>
+                  <StatusBadge status={testInfo.status} />
                 </dd>
               </div>
             </dl>
@@ -154,9 +147,7 @@ export default function ResultDetail() {
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-gray-500">Created</dt>
-                <dd className="font-medium text-gray-900">
-                  {formatDateTime(testInfo.created_at)}
-                </dd>
+                <dd className="font-medium text-gray-900">{formatDateTime(testInfo.created_at)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-gray-500">Started</dt>
@@ -173,7 +164,7 @@ export default function ResultDetail() {
               <div className="flex justify-between">
                 <dt className="text-gray-500">Method</dt>
                 <dd className="font-medium text-gray-900">
-                  {testInfo.submission_method ? formatStatus(testInfo.submission_method) : '—'}
+                  {testInfo.submission_method ? formatStatusLabel(testInfo.submission_method) : '—'}
                 </dd>
               </div>
             </dl>
@@ -204,14 +195,13 @@ export default function ResultDetail() {
         </Card>
       </div>
 
-      {/* Category Breakdown */}
       {categoryBreakdown.length > 0 && (
         <Card className="mt-6">
           <CardHeader>
             <h2 className="text-lg font-semibold text-gray-900">Category Breakdown</h2>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {categoryBreakdown.map((cat) => (
                 <div key={cat.category} className="rounded-lg border border-gray-100 p-4">
                   <p className="text-sm font-medium text-gray-500">{cat.category}</p>
@@ -226,7 +216,6 @@ export default function ResultDetail() {
         </Card>
       )}
 
-      {/* Questions */}
       <Card className="mt-6">
         <CardHeader>
           <h2 className="text-lg font-semibold text-gray-900">Questions ({questions.length})</h2>
@@ -238,10 +227,10 @@ export default function ResultDetail() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-500">
-                        Q{question.display_order}
+                      <span className="text-sm font-medium text-gray-500">Q{question.display_order}</span>
+                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800">
+                        {question.category}
                       </span>
-                      <Badge variant="gray">{question.category}</Badge>
                       <span className="text-xs text-gray-500">
                         {question.type === 'mcq' ? 'MCQ' : 'Descriptive'}
                       </span>

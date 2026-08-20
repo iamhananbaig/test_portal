@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
+import { ArrowLeft } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Card, { CardContent, CardHeader } from '../../components/ui/Card'
 import Input from '../../components/ui/Input'
+import Spinner from '../../components/ui/Spinner'
+import Toast from '../../components/ui/Toast'
+import PageHeader from '../../components/ui/PageHeader'
 
 interface TestInfo {
   id: number
@@ -33,7 +37,7 @@ export default function MarkingDetail() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [finalizing, setFinalizing] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -58,12 +62,10 @@ export default function MarkingDetail() {
 
   const handleMarkChange = (questionId: number, value: string) => {
     setMarks((prev) => ({ ...prev, [questionId]: value }))
-    setMessage(null)
   }
 
   const handleSave = async () => {
     setSaving(true)
-    setMessage(null)
     try {
       const marksPayload = questions
         .filter((q) => marks[q.question_id] !== '')
@@ -76,16 +78,16 @@ export default function MarkingDetail() {
         })
 
       if (marksPayload.length === 0) {
-        setMessage({ type: 'error', text: 'Please enter marks for at least one question.' })
+        setToast({ message: 'Please enter marks for at least one question.', type: 'error' })
         return
       }
 
       await api.put(`/marking/${id}`, { marks: marksPayload })
-      setMessage({ type: 'success', text: 'Marks saved successfully.' })
+      setToast({ message: 'Marks saved successfully.', type: 'success' })
       fetchData()
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to save marks.' })
+      setToast({ message: error.response?.data?.message || 'Failed to save marks.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -95,21 +97,20 @@ export default function MarkingDetail() {
     if (!window.confirm('Are you sure? This action cannot be undone. All marks will be finalized.')) return
 
     setFinalizing(true)
-    setMessage(null)
     try {
       await api.post(`/marking/${id}/finalize`)
-      setMessage({ type: 'success', text: 'Test finalized successfully.' })
+      setToast({ message: 'Test finalized successfully.', type: 'success' })
       fetchData()
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to finalize.' })
+      setToast({ message: error.response?.data?.message || 'Failed to finalize.', type: 'error' })
     } finally {
       setFinalizing(false)
     }
   }
 
   if (loading) {
-    return <p className="py-8 text-center text-gray-500">Loading...</p>
+    return <div className="py-12 flex justify-center"><Spinner /></div>
   }
 
   if (!testInfo) {
@@ -121,23 +122,17 @@ export default function MarkingDetail() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Marking: {testInfo.test_id}</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            {testInfo.candidate_name} — {testInfo.candidate_cnic}
-          </p>
-        </div>
-        <Button variant="secondary" onClick={() => navigate('/admin/marking')}>
-          Back to Queue
-        </Button>
-      </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {message && (
-        <div className={`mt-4 rounded-lg px-4 py-3 text-sm ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-          {message.text}
-        </div>
-      )}
+      <PageHeader
+        title={`Marking: ${testInfo.test_id}`}
+        description={`${testInfo.candidate_name} — ${testInfo.candidate_cnic}`}
+        action={
+          <Button variant="secondary" onClick={() => navigate('/admin/marking')} icon={<ArrowLeft className="h-4 w-4" />}>
+            Back to Queue
+          </Button>
+        }
+      />
 
       <div className="mt-6 space-y-4">
         {questions.map((question) => (
@@ -183,11 +178,11 @@ export default function MarkingDetail() {
 
       {!isCompleted && (
         <div className="mt-6 flex gap-3">
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Marks'}
+          <Button onClick={handleSave} loading={saving}>
+            Save Marks
           </Button>
-          <Button variant="secondary" onClick={handleFinalize} disabled={finalizing || !allMarked}>
-            {finalizing ? 'Finalizing...' : 'Finalize Test'}
+          <Button variant="secondary" onClick={handleFinalize} loading={finalizing} disabled={!allMarked}>
+            Finalize Test
           </Button>
         </div>
       )}
