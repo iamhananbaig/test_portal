@@ -30,3 +30,7 @@ npm-debug.log*
 
 # Storage
 api/storage/app/uploads/
+
+# Generated output
+graphify-out/
+__pycache__/
