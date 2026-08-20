@@ -10,16 +10,19 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm',
-  secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-400 border border-gray-200',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm',
-  ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-400',
+  primary:
+    'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-sm shadow-primary-600/20',
+  secondary:
+    'bg-slate-100 text-slate-800 hover:bg-slate-200 focus:ring-slate-400 border border-slate-200',
+  danger:
+    'bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500 shadow-sm shadow-rose-600/20',
+  ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 focus:ring-slate-400',
 }
 
 const sizeClasses = {
   sm: 'px-3 py-1.5 text-sm gap-1.5',
   md: 'px-4 py-2 text-sm gap-2',
-  lg: 'px-6 py-2.5 text-base gap-2',
+  lg: 'px-5 py-2.5 text-sm gap-2',
 }
 
 export default function Button({

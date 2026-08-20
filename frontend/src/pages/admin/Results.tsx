@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { BarChart3 } from 'lucide-react'
 import api from '../../services/api'
@@ -39,24 +39,33 @@ export default function Results() {
   const [totalPages, setTotalPages] = useState(1)
   const debouncedSearch = useDebounce(filters.search, 300)
 
-  const fetchResults = async () => {
-    setLoading(true)
-    try {
+  const refetch = useCallback(() => {
+    let cancelled = false
+
+    async function load() {
       const params: Record<string, string | number> = { page }
       if (filters.status) params.status = filters.status
       if (debouncedSearch) params.search = debouncedSearch
 
       const response = await api.get('/results', { params })
-      setResults(response.data.data)
-      setTotalPages(response.data.meta.last_page)
-    } finally {
-      setLoading(false)
+      if (!cancelled) {
+        setResults(response.data.data)
+        setTotalPages(response.data.meta.last_page)
+      }
     }
-  }
+
+    load().finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [page, filters.status, debouncedSearch])
 
   useEffect(() => {
-    fetchResults()
-  }, [filters.status, debouncedSearch, page])
+    return refetch()
+  }, [refetch])
 
   return (
     <div>
@@ -68,7 +77,10 @@ export default function Results() {
             <Select
               label="Status"
               value={filters.status}
-              onChange={(e) => { setFilters({ ...filters, status: e.target.value }); setPage(1) }}
+              onChange={(e) => {
+                setFilters({ ...filters, status: e.target.value })
+                setPage(1)
+              }}
               options={[
                 { value: '', label: 'All' },
                 { value: 'completed', label: 'Completed' },
@@ -80,13 +92,18 @@ export default function Results() {
                 label="Search"
                 placeholder="Search by name, CNIC, or Test ID..."
                 value={filters.search}
-                onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(1) }}
+                onChange={(e) => {
+                  setFilters({ ...filters, search: e.target.value })
+                  setPage(1)
+                }}
               />
             </div>
           </div>
 
           {loading ? (
-            <div className="py-12 flex justify-center"><Spinner /></div>
+            <div className="py-12 flex justify-center">
+              <Spinner />
+            </div>
           ) : results.length === 0 ? (
             <EmptyState
               icon={BarChart3}
@@ -108,22 +125,26 @@ export default function Results() {
                 {results.map((result) => (
                   <TableRow key={result.id}>
                     <TableCell>
-                      <p className="font-medium text-gray-900">{result.candidate_name}</p>
-                      <p className="text-xs text-gray-500">{result.candidate_cnic}</p>
+                      <p className="font-medium text-slate-900">{result.candidate_name}</p>
+                      <p className="text-xs text-slate-500">{result.candidate_cnic}</p>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm font-semibold text-gray-900">{result.test_id}</span>
+                      <span className="font-mono text-sm font-semibold text-slate-900">
+                        {result.test_id}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {result.total_obtained !== null ? (
-                        <span className="font-semibold">
+                        <span className="font-semibold text-slate-900">
                           {result.total_obtained} / {result.total_marks}
                         </span>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-slate-400">—</span>
                       )}
                     </TableCell>
-                    <TableCell>{result.submitted_at ? formatDateTime(result.submitted_at) : '—'}</TableCell>
+                    <TableCell>
+                      {result.submitted_at ? formatDateTime(result.submitted_at) : '—'}
+                    </TableCell>
                     <TableCell>
                       <StatusBadge status={result.status} />
                     </TableCell>

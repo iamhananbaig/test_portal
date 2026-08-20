@@ -39,7 +39,9 @@ export default function TestCreate() {
   useEffect(() => {
     const fetchCategories = async () => {
       const response = await api.get('/categories', { params: { per_page: 100 } })
-      setCategories(response.data.data.filter((c: Category & { is_active: boolean }) => c.is_active))
+      setCategories(
+        response.data.data.filter((c: Category & { is_active: boolean }) => c.is_active),
+      )
     }
     fetchCategories()
   }, [])
@@ -116,10 +118,12 @@ export default function TestCreate() {
       <Card className="mt-6">
         <CardContent>
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
+            <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</div>
           )}
 
-          <h2 className="mb-4 text-sm font-medium text-gray-700">Candidate Information</h2>
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Candidate Information
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Candidate Name"
@@ -135,7 +139,9 @@ export default function TestCreate() {
             />
           </div>
 
-          <h2 className="mb-4 mt-6 text-sm font-medium text-gray-700">Test Configuration</h2>
+          <h2 className="mb-4 mt-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Test Configuration
+          </h2>
           <div className="space-y-3">
             {categoryRows.map((row, index) => (
               <div key={index} className="flex items-end gap-3">
@@ -144,7 +150,10 @@ export default function TestCreate() {
                     label={index === 0 ? 'Category' : undefined}
                     value={row.category_id}
                     onChange={(e) => updateRow(index, 'category_id', e.target.value)}
-                    options={availableCategories(index).map((c) => ({ value: c.id, label: c.name }))}
+                    options={availableCategories(index).map((c) => ({
+                      value: c.id,
+                      label: c.name,
+                    }))}
                     placeholder="Select category"
                   />
                 </div>
@@ -186,32 +195,56 @@ export default function TestCreate() {
             <Button variant="secondary" onClick={() => navigate('/admin/tests')}>
               Cancel
             </Button>
-            <Button onClick={handleGenerate} loading={saving} disabled={!candidateName || !candidateCnic}>
+            <Button
+              onClick={handleGenerate}
+              loading={saving}
+              disabled={!candidateName || !candidateCnic}
+            >
               Generate Test
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Modal open={successModal} onClose={() => { setSuccessModal(false); navigate('/admin/tests') }} title="Test Generated">
+      <Modal
+        open={successModal}
+        onClose={() => {
+          setSuccessModal(false)
+          navigate('/admin/tests')
+        }}
+        title="Test Generated"
+      >
         <div className="space-y-4">
-          <div className="rounded-lg bg-green-50 p-4 text-center">
-            <CheckCircle className="mx-auto h-8 w-8 text-green-600 mb-2" />
-            <p className="text-sm text-gray-600">Candidate</p>
-            <p className="font-semibold text-gray-900">{candidateName}</p>
+          <div className="rounded-lg bg-emerald-50 p-4 text-center">
+            <CheckCircle className="mx-auto h-7 w-7 text-emerald-600 mb-2" />
+            <p className="text-sm text-slate-500">Candidate</p>
+            <p className="font-semibold text-slate-900">{candidateName}</p>
           </div>
-          <div className="rounded-lg bg-blue-50 p-4 text-center">
-            <p className="text-sm text-gray-600">Test ID</p>
-            <p className="text-2xl font-bold tracking-wider text-blue-700">{generatedTestId}</p>
+          <div className="rounded-lg bg-primary-50 p-4 text-center">
+            <p className="text-sm text-slate-500">Test ID</p>
+            <p className="text-2xl font-bold tracking-wider text-primary-700">
+              {generatedTestId}
+            </p>
           </div>
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-slate-500">
             Valid until: {formatTime(generatedExpiry)}
           </div>
           <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1" onClick={copyTestId} icon={copied ? <CheckCircle className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}>
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={copyTestId}
+              icon={copied ? <CheckCircle className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
+            >
               {copied ? 'Copied!' : 'Copy Test ID'}
             </Button>
-            <Button className="flex-1" onClick={() => { setSuccessModal(false); navigate('/admin/tests') }}>
+            <Button
+              className="flex-1"
+              onClick={() => {
+                setSuccessModal(false)
+                navigate('/admin/tests')
+              }}
+            >
               Done
             </Button>
           </div>

@@ -1,6 +1,16 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router'
-import { LayoutDashboard, FolderOpen, HelpCircle, FileText, PenLine, BarChart3, LogOut, Menu, X } from 'lucide-react'
+import {
+  LayoutDashboard,
+  FolderOpen,
+  HelpCircle,
+  FileText,
+  PenLine,
+  BarChart3,
+  LogOut,
+  Menu,
+  X,
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/ui/Button'
 
@@ -24,29 +34,29 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-slate-50">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:static lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
-          <h1 className="text-lg font-bold text-gray-900">Test Portal</h1>
+        <div className="flex h-14 items-center justify-between border-b border-slate-100 px-5">
+          <h1 className="text-sm font-semibold tracking-tight text-slate-900">Test Portal</h1>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="rounded-lg p-1 text-gray-400 hover:text-gray-600 lg:hidden"
+            className="rounded-lg p-1 text-slate-400 hover:text-slate-600 lg:hidden"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
-        <nav className="flex-1 space-y-1 px-3 py-4">
+        <nav className="flex-1 space-y-0.5 px-3 py-3">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -54,39 +64,44 @@ export default function AdminLayout() {
               end={item.end}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`
               }
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className="h-4 w-4" />
               {item.label}
             </NavLink>
           ))}
         </nav>
-        <div className="border-t border-gray-200 px-4 py-4">
-          <div className="mb-2 truncate text-sm font-medium text-gray-900">{user?.name}</div>
-          <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleLogout}>
-            <LogOut className="h-4 w-4" />
+        <div className="border-t border-slate-100 px-4 py-3">
+          <div className="mb-1.5 truncate text-xs font-medium text-slate-900">{user?.name}</div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 text-slate-500"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-3.5 w-3.5" />
             Logout
           </Button>
         </div>
       </aside>
 
       <main className="flex-1 overflow-auto">
-        <div className="flex items-center border-b border-gray-200 bg-white px-4 py-3 lg:hidden">
+        <div className="flex items-center border-b border-slate-200 bg-white px-4 py-2.5 lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             aria-label="Open menu"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5" />
           </button>
-          <h1 className="ml-3 text-lg font-bold text-gray-900">Test Portal</h1>
+          <h1 className="ml-2.5 text-sm font-semibold text-slate-900">Test Portal</h1>
         </div>
-        <div className="mx-auto max-w-7xl px-6 py-8">
+        <div className="mx-auto max-w-6xl px-6 py-6">
           <Outlet />
         </div>
       </main>

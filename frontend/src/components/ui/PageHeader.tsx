@@ -10,8 +10,8 @@ export default function PageHeader({ title, description, action }: PageHeaderPro
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-        {description && <p className="mt-1 text-sm text-gray-500">{description}</p>}
+        <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
+        {description && <p className="mt-0.5 text-sm text-slate-500">{description}</p>}
       </div>
       {action && <div>{action}</div>}
     </div>

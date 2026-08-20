@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { HelpCircle, Plus } from 'lucide-react'
 import api from '../../services/api'
@@ -44,9 +44,27 @@ export default function QuestionBank() {
   const [totalPages, setTotalPages] = useState(1)
   const debouncedSearch = useDebounce(filters.search, 300)
 
-  const fetchQuestions = async () => {
-    setLoading(true)
-    try {
+  const refetchCategories = useCallback(() => {
+    let cancelled = false
+
+    async function load() {
+      const response = await api.get('/categories', { params: { per_page: 100 } })
+      if (!cancelled) {
+        setCategories(response.data?.data ?? [])
+      }
+    }
+
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const refetchQuestions = useCallback(() => {
+    let cancelled = false
+
+    async function load() {
       const params: Record<string, string | number> = { page }
       if (filters.category_id) params.category_id = filters.category_id
       if (filters.type) params.type = filters.type
@@ -54,35 +72,32 @@ export default function QuestionBank() {
       if (debouncedSearch) params.search = debouncedSearch
 
       const response = await api.get('/questions', { params })
-      setQuestions(response.data?.data ?? [])
-      setTotalPages(response.data?.meta?.last_page ?? 1)
-    } catch {
-      setQuestions([])
-    } finally {
-      setLoading(false)
+      if (!cancelled) {
+        setQuestions(response.data?.data ?? [])
+        setTotalPages(response.data?.meta?.last_page ?? 1)
+      }
     }
-  }
 
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('/categories', { params: { per_page: 100 } })
-      setCategories(response.data?.data ?? [])
-    } catch {
-      setCategories([])
+    load().finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+
+    return () => {
+      cancelled = true
     }
-  }
+  }, [page, filters.category_id, filters.type, filters.is_active, debouncedSearch])
 
   useEffect(() => {
-    fetchCategories()
-  }, [])
+    return refetchCategories()
+  }, [refetchCategories])
 
   useEffect(() => {
-    fetchQuestions()
-  }, [filters.category_id, filters.type, filters.is_active, debouncedSearch, page])
+    return refetchQuestions()
+  }, [refetchQuestions])
 
   const toggleStatus = async (q: Question) => {
     await api.put(`/questions/${q.id}/status`)
-    fetchQuestions()
+    refetchQuestions()
   }
 
   return (
@@ -90,7 +105,10 @@ export default function QuestionBank() {
       <PageHeader
         title="Question Bank"
         action={
-          <Button onClick={() => navigate('/admin/questions/new')} icon={<Plus className="h-4 w-4" />}>
+          <Button
+            onClick={() => navigate('/admin/questions/new')}
+            icon={<Plus className="h-4 w-4" />}
+          >
             Add Question
           </Button>
         }
@@ -102,13 +120,22 @@ export default function QuestionBank() {
             <Select
               label="Category"
               value={filters.category_id}
-              onChange={(e) => { setFilters({ ...filters, category_id: e.target.value }); setPage(1) }}
-              options={[{ value: '', label: 'All' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
+              onChange={(e) => {
+                setFilters({ ...filters, category_id: e.target.value })
+                setPage(1)
+              }}
+              options={[
+                { value: '', label: 'All' },
+                ...categories.map((c) => ({ value: c.id, label: c.name })),
+              ]}
             />
             <Select
               label="Type"
               value={filters.type}
-              onChange={(e) => { setFilters({ ...filters, type: e.target.value }); setPage(1) }}
+              onChange={(e) => {
+                setFilters({ ...filters, type: e.target.value })
+                setPage(1)
+              }}
               options={[
                 { value: '', label: 'All' },
                 { value: 'mcq', label: 'MCQ' },
@@ -118,7 +145,10 @@ export default function QuestionBank() {
             <Select
               label="Status"
               value={filters.is_active}
-              onChange={(e) => { setFilters({ ...filters, is_active: e.target.value }); setPage(1) }}
+              onChange={(e) => {
+                setFilters({ ...filters, is_active: e.target.value })
+                setPage(1)
+              }}
               options={[
                 { value: '', label: 'All' },
                 { value: '1', label: 'Active' },
@@ -129,18 +159,30 @@ export default function QuestionBank() {
               label="Search"
               placeholder="Search questions..."
               value={filters.search}
-              onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(1) }}
+              onChange={(e) => {
+                setFilters({ ...filters, search: e.target.value })
+                setPage(1)
+              }}
             />
           </div>
 
           {loading ? (
-            <div className="py-12 flex justify-center"><Spinner /></div>
+            <div className="py-12 flex justify-center">
+              <Spinner />
+            </div>
           ) : questions.length === 0 ? (
             <EmptyState
               icon={HelpCircle}
               message="No questions found"
               description="Get started by adding your first question."
-              action={<Button onClick={() => navigate('/admin/questions/new')} size="sm">Add Question</Button>}
+              action={
+                <Button
+                  onClick={() => navigate('/admin/questions/new')}
+                  size="sm"
+                >
+                  Add Question
+                </Button>
+              }
             />
           ) : (
             <>
@@ -171,8 +213,12 @@ export default function QuestionBank() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/questions/${q.id}/edit`)}>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/admin/questions/${q.id}/edit`)}
+                        >
                           Edit
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => toggleStatus(q)}>

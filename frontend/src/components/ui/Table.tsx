@@ -18,9 +18,13 @@ export default function Table({ columns, children, caption }: TableProps) {
       <table className="w-full text-left text-sm">
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead>
-          <tr className="border-b border-gray-200 text-gray-600">
+          <tr className="border-b border-slate-200 text-slate-500">
             {columns.map((col) => (
-              <th key={col.key} scope="col" className={`pb-3 font-medium ${col.className || ''}`}>
+              <th
+                key={col.key}
+                scope="col"
+                className={`pb-3 text-xs font-semibold uppercase tracking-wider ${col.className || ''}`}
+              >
                 {col.header}
               </th>
             ))}
@@ -38,7 +42,13 @@ interface TableRowProps {
 }
 
 export function TableRow({ children, className = '' }: TableRowProps) {
-  return <tr className={`border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors ${className}`}>{children}</tr>
+  return (
+    <tr
+      className={`border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors ${className}`}
+    >
+      {children}
+    </tr>
+  )
 }
 
 interface TableCellProps {

@@ -49,7 +49,9 @@ export default function CandidateInstructions() {
         if (!res.ok) throw new Error('Failed to load instructions')
         return res.json()
       })
-      .then((data) => { if (data) setData(data) })
+      .then((data) => {
+        if (data) setData(data)
+      })
       .catch(() => setError('Failed to load test instructions'))
       .finally(() => setLoading(false))
   }, [testId, navigate])
@@ -84,7 +86,7 @@ export default function CandidateInstructions() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30">
         <Spinner size="lg" />
       </div>
     )
@@ -92,10 +94,10 @@ export default function CandidateInstructions() {
 
   if (error && !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30">
         <div className="text-center">
-          <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-          <p className="text-red-600 mb-4">{error}</p>
+          <AlertTriangle className="mx-auto h-10 w-10 text-rose-500 mb-4" />
+          <p className="text-rose-600 mb-4">{error}</p>
           <Button onClick={() => navigate('/candidate')}>Back to Login</Button>
         </div>
       </div>
@@ -103,64 +105,78 @@ export default function CandidateInstructions() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30 py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-6">
-            <h1 className="text-2xl font-bold">Test Instructions</h1>
-            <p className="mt-1 text-blue-100">Please read carefully before starting</p>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-5">
+            <h1 className="text-xl font-semibold">Test Instructions</h1>
+            <p className="mt-0.5 text-primary-100 text-sm">
+              Please read carefully before starting
+            </p>
           </div>
 
           <div className="p-8 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
-                <BookOpen className="h-5 w-5 text-gray-400" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3.5">
+                <BookOpen className="h-4 w-4 text-slate-400" />
                 <div>
-                  <div className="text-xs text-gray-500">Candidate</div>
-                  <div className="font-semibold text-gray-900">{data?.candidate_name}</div>
+                  <div className="text-xs text-slate-400">Candidate</div>
+                  <div className="text-sm font-medium text-slate-900">{data?.candidate_name}</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
-                <span className="text-gray-400 font-mono text-sm">#</span>
+              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3.5">
+                <span className="text-slate-400 font-mono text-xs">#</span>
                 <div>
-                  <div className="text-xs text-gray-500">Test ID</div>
-                  <div className="font-semibold text-gray-900 font-mono">{data?.test_id}</div>
+                  <div className="text-xs text-slate-400">Test ID</div>
+                  <div className="text-sm font-medium text-slate-900 font-mono">
+                    {data?.test_id}
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
-                <Clock className="h-5 w-5 text-gray-400" />
+              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3.5">
+                <Clock className="h-4 w-4 text-slate-400" />
                 <div>
-                  <div className="text-xs text-gray-500">Duration</div>
-                  <div className="font-semibold text-gray-900">{data?.duration_minutes} minutes</div>
+                  <div className="text-xs text-slate-400">Duration</div>
+                  <div className="text-sm font-medium text-slate-900">
+                    {data?.duration_minutes} minutes
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
-                <span className="text-gray-400 font-semibold text-sm">/</span>
+              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3.5">
+                <span className="text-slate-400 font-semibold text-xs">/</span>
                 <div>
-                  <div className="text-xs text-gray-500">Total Marks</div>
-                  <div className="font-semibold text-gray-900">{data?.total_marks}</div>
+                  <div className="text-xs text-slate-400">Total Marks</div>
+                  <div className="text-sm font-medium text-slate-900">{data?.total_marks}</div>
                 </div>
               </div>
             </div>
 
             {data?.category_breakdown && data.category_breakdown.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Category Breakdown</h3>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <h3 className="font-medium text-slate-900 mb-2 text-sm">Category Breakdown</h3>
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-slate-50">
                       <tr>
-                        <th className="text-left px-4 py-2 font-medium text-gray-600">Category</th>
-                        <th className="text-center px-4 py-2 font-medium text-gray-600">Questions</th>
-                        <th className="text-center px-4 py-2 font-medium text-gray-600">Marks</th>
+                        <th className="text-left px-4 py-2 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                          Category
+                        </th>
+                        <th className="text-center px-4 py-2 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                          Questions
+                        </th>
+                        <th className="text-center px-4 py-2 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                          Marks
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.category_breakdown.map((cat, i) => (
-                        <tr key={i} className="border-t border-gray-200">
-                          <td className="px-4 py-2">{cat.category}</td>
-                          <td className="px-4 py-2 text-center">{cat.count}</td>
-                          <td className="px-4 py-2 text-center font-medium">{cat.marks}</td>
+                        <tr key={i} className="border-t border-slate-100">
+                          <td className="px-4 py-2 text-slate-700">{cat.category}</td>
+                          <td className="px-4 py-2 text-center text-slate-600">{cat.count}</td>
+                          <td className="px-4 py-2 text-center font-medium text-slate-900">
+                            {cat.marks}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -170,31 +186,41 @@ export default function CandidateInstructions() {
             )}
 
             <div>
-              <h3 className="font-semibold text-gray-900 mb-3">Instructions</h3>
-              <ol className="space-y-2 text-sm text-gray-600">
+              <h3 className="font-medium text-slate-900 mb-2 text-sm">Instructions</h3>
+              <ol className="space-y-2 text-sm text-slate-600">
                 {instructions.map((instruction, i) => (
                   <li key={i} className="flex gap-3">
-                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+                    <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-700 mt-0.5">
                       {i + 1}
                     </span>
-                    <span className="pt-0.5">{instruction}</span>
+                    <span>{instruction}</span>
                   </li>
                 ))}
               </ol>
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700 flex items-center gap-2">
+              <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                 {error}
               </div>
             )}
 
-            <div className="flex gap-3 pt-4">
-              <Button variant="secondary" onClick={() => navigate('/candidate')} className="flex-1" icon={<ArrowLeft className="h-4 w-4" />}>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="secondary"
+                onClick={() => navigate('/candidate')}
+                className="flex-1"
+                icon={<ArrowLeft className="h-4 w-4" />}
+              >
                 Back
               </Button>
-              <Button onClick={handleStart} loading={starting} className="flex-1" icon={<Play className="h-4 w-4" />}>
+              <Button
+                onClick={handleStart}
+                loading={starting}
+                className="flex-1"
+                icon={<Play className="h-4 w-4" />}
+              >
                 Start Test
               </Button>
             </div>

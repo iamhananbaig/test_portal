@@ -57,7 +57,9 @@ interface Question {
 }
 
 function formatStatusLabel(status: string): string {
-  return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+  return status
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (l) => l.toUpperCase())
 }
 
 export default function ResultDetail() {
@@ -87,16 +89,21 @@ export default function ResultDetail() {
   }, [id])
 
   if (loading) {
-    return <div className="py-12 flex justify-center"><Spinner /></div>
+    return (
+      <div className="py-12 flex justify-center">
+        <Spinner />
+      </div>
+    )
   }
 
   if (!testInfo) {
-    return <p className="py-8 text-center text-gray-500">Result not found.</p>
+    return <p className="py-8 text-center text-slate-500">Result not found.</p>
   }
 
-  const percentage = result && testInfo.total_marks > 0
-    ? ((result.total_obtained / testInfo.total_marks) * 100).toFixed(1)
-    : '0'
+  const percentage =
+    result && testInfo.total_marks > 0
+      ? ((result.total_obtained / testInfo.total_marks) * 100).toFixed(1)
+      : '0'
 
   return (
     <div>
@@ -104,7 +111,11 @@ export default function ResultDetail() {
         title={`Result: ${testInfo.test_id}`}
         description={`${testInfo.candidate_name} — ${testInfo.candidate_cnic}`}
         action={
-          <Button variant="secondary" onClick={() => navigate('/admin/results')} icon={<ArrowLeft className="h-4 w-4" />}>
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/admin/results')}
+            icon={<ArrowLeft className="h-4 w-4" />}
+          >
             Back to Results
           </Button>
         }
@@ -113,24 +124,26 @@ export default function ResultDetail() {
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <h2 className="text-sm font-medium text-gray-500">Candidate Info</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Candidate Info
+            </h2>
           </CardHeader>
           <CardContent>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-gray-500">Name</dt>
-                <dd className="font-medium text-gray-900">{testInfo.candidate_name}</dd>
+                <dt className="text-slate-500">Name</dt>
+                <dd className="font-medium text-slate-900">{testInfo.candidate_name}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">CNIC</dt>
-                <dd className="font-medium text-gray-900">{testInfo.candidate_cnic}</dd>
+                <dt className="text-slate-500">CNIC</dt>
+                <dd className="font-medium text-slate-900">{testInfo.candidate_cnic}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Duration</dt>
-                <dd className="font-medium text-gray-900">{testInfo.duration_minutes} min</dd>
+                <dt className="text-slate-500">Duration</dt>
+                <dd className="font-medium text-slate-900">{testInfo.duration_minutes} min</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Status</dt>
+                <dt className="text-slate-500">Status</dt>
                 <dd>
                   <StatusBadge status={testInfo.status} />
                 </dd>
@@ -141,30 +154,36 @@ export default function ResultDetail() {
 
         <Card>
           <CardHeader>
-            <h2 className="text-sm font-medium text-gray-500">Timestamps</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Timestamps
+            </h2>
           </CardHeader>
           <CardContent>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-gray-500">Created</dt>
-                <dd className="font-medium text-gray-900">{formatDateTime(testInfo.created_at)}</dd>
+                <dt className="text-slate-500">Created</dt>
+                <dd className="font-medium text-slate-900">
+                  {formatDateTime(testInfo.created_at)}
+                </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Started</dt>
-                <dd className="font-medium text-gray-900">
+                <dt className="text-slate-500">Started</dt>
+                <dd className="font-medium text-slate-900">
                   {testInfo.started_at ? formatDateTime(testInfo.started_at) : '—'}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Submitted</dt>
-                <dd className="font-medium text-gray-900">
+                <dt className="text-slate-500">Submitted</dt>
+                <dd className="font-medium text-slate-900">
                   {testInfo.submitted_at ? formatDateTime(testInfo.submitted_at) : '—'}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Method</dt>
-                <dd className="font-medium text-gray-900">
-                  {testInfo.submission_method ? formatStatusLabel(testInfo.submission_method) : '—'}
+                <dt className="text-slate-500">Method</dt>
+                <dd className="font-medium text-slate-900">
+                  {testInfo.submission_method
+                    ? formatStatusLabel(testInfo.submission_method)
+                    : '—'}
                 </dd>
               </div>
             </dl>
@@ -173,23 +192,28 @@ export default function ResultDetail() {
 
         <Card>
           <CardHeader>
-            <h2 className="text-sm font-medium text-gray-500">Score</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Score
+            </h2>
           </CardHeader>
           <CardContent>
             {result ? (
               <div className="text-center">
-                <p className="text-4xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-slate-900">
                   {result.total_obtained}
-                  <span className="text-lg font-normal text-gray-500"> / {testInfo.total_marks}</span>
+                  <span className="text-base font-normal text-slate-400">
+                    {' '}
+                    / {testInfo.total_marks}
+                  </span>
                 </p>
-                <p className="mt-1 text-2xl font-semibold text-blue-600">{percentage}%</p>
+                <p className="mt-1 text-xl font-semibold text-primary-600">{percentage}%</p>
                 <div className="mt-3 space-y-1 text-sm">
-                  <p className="text-gray-600">MCQ: {result.mcq_marks}</p>
-                  <p className="text-gray-600">Descriptive: {result.descriptive_marks}</p>
+                  <p className="text-slate-500">MCQ: {result.mcq_marks}</p>
+                  <p className="text-slate-500">Descriptive: {result.descriptive_marks}</p>
                 </div>
               </div>
             ) : (
-              <p className="py-4 text-center text-gray-500">No result yet</p>
+              <p className="py-4 text-center text-slate-500">No result yet</p>
             )}
           </CardContent>
         </Card>
@@ -198,16 +222,16 @@ export default function ResultDetail() {
       {categoryBreakdown.length > 0 && (
         <Card className="mt-6">
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Category Breakdown</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Category Breakdown</h2>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {categoryBreakdown.map((cat) => (
-                <div key={cat.category} className="rounded-lg border border-gray-100 p-4">
-                  <p className="text-sm font-medium text-gray-500">{cat.category}</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-900">
+                <div key={cat.category} className="rounded-lg border border-slate-100 p-4">
+                  <p className="text-sm font-medium text-slate-500">{cat.category}</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">
                     {cat.obtained_marks}
-                    <span className="text-sm font-normal text-gray-500"> / {cat.total_marks}</span>
+                    <span className="text-sm font-normal text-slate-400"> / {cat.total_marks}</span>
                   </p>
                 </div>
               ))}
@@ -218,24 +242,26 @@ export default function ResultDetail() {
 
       <Card className="mt-6">
         <CardHeader>
-          <h2 className="text-lg font-semibold text-gray-900">Questions ({questions.length})</h2>
+          <h2 className="text-sm font-semibold text-slate-900">Questions ({questions.length})</h2>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {questions.map((question) => (
-              <div key={question.question_id} className="rounded-lg border border-gray-200 p-4">
+              <div key={question.question_id} className="rounded-lg border border-slate-100 p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-500">Q{question.display_order}</span>
-                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800">
+                      <span className="text-sm font-medium text-slate-500">
+                        Q{question.display_order}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
                         {question.category}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-slate-400">
                         {question.type === 'mcq' ? 'MCQ' : 'Descriptive'}
                       </span>
                     </div>
-                    <p className="mt-2 text-gray-900">{question.text}</p>
+                    <p className="mt-2 text-slate-900">{question.text}</p>
 
                     {question.type === 'mcq' && question.options.length > 0 && (
                       <div className="mt-3 space-y-2">
@@ -247,18 +273,22 @@ export default function ResultDetail() {
                               key={option.id}
                               className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
                                 isSelected && isCorrect
-                                  ? 'bg-green-50 text-green-800'
+                                  ? 'bg-emerald-50 text-emerald-800'
                                   : isSelected && !isCorrect
-                                    ? 'bg-red-50 text-red-800'
+                                    ? 'bg-rose-50 text-rose-800'
                                     : isCorrect
-                                      ? 'bg-green-50 text-green-800'
-                                      : 'bg-gray-50 text-gray-700'
+                                      ? 'bg-emerald-50 text-emerald-800'
+                                      : 'bg-slate-50 text-slate-600'
                               }`}
                             >
                               <span className="font-medium">{option.label}.</span>
                               <span>{option.text}</span>
-                              {isSelected && <span className="ml-auto text-xs font-medium">Selected</span>}
-                              {isCorrect && <span className="ml-auto text-xs font-medium">Correct</span>}
+                              {isSelected && (
+                                <span className="ml-auto text-xs font-medium">Selected</span>
+                              )}
+                              {isCorrect && (
+                                <span className="ml-auto text-xs font-medium">Correct</span>
+                              )}
                             </div>
                           )
                         })}
@@ -266,19 +296,19 @@ export default function ResultDetail() {
                     )}
 
                     {question.type === 'descriptive' && (
-                      <div className="mt-3 rounded-lg bg-gray-50 p-3">
-                        <p className="text-sm font-medium text-gray-700">Answer:</p>
-                        <p className="mt-1 whitespace-pre-wrap text-gray-900">
+                      <div className="mt-3 rounded-lg bg-slate-50 p-3">
+                        <p className="text-sm font-medium text-slate-600">Answer:</p>
+                        <p className="mt-1 whitespace-pre-wrap text-slate-900">
                           {question.descriptive_answer || 'No answer submitted'}
                         </p>
                       </div>
                     )}
                   </div>
                   <div className="ml-4 text-right">
-                    <p className="text-sm text-gray-500">Marks</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-sm text-slate-400">Marks</p>
+                    <p className="text-lg font-semibold text-slate-900">
                       {question.awarded_marks !== null ? question.awarded_marks : '—'}
-                      <span className="text-sm font-normal text-gray-500"> / {question.marks}</span>
+                      <span className="text-sm font-normal text-slate-400"> / {question.marks}</span>
                     </p>
                   </div>
                 </div>

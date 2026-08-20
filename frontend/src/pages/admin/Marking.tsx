@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { PenLine } from 'lucide-react'
 import api from '../../services/api'
@@ -9,6 +9,7 @@ import Pagination from '../../components/ui/Pagination'
 import Spinner from '../../components/ui/Spinner'
 import EmptyState from '../../components/ui/EmptyState'
 import PageHeader from '../../components/ui/PageHeader'
+import Badge from '../../components/ui/Badge'
 import { formatDateTime } from '../../utils/dates'
 
 interface Test {
@@ -29,29 +30,43 @@ export default function Marking() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  const fetchTests = async () => {
-    setLoading(true)
-    try {
+  const refetch = useCallback(() => {
+    let cancelled = false
+
+    async function load() {
       const response = await api.get('/marking/pending', { params: { page } })
-      setTests(response.data.data)
-      setTotalPages(response.data.meta.last_page)
-    } finally {
-      setLoading(false)
+      if (!cancelled) {
+        setTests(response.data.data)
+        setTotalPages(response.data.meta.last_page)
+      }
     }
-  }
+
+    load().finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [page])
 
   useEffect(() => {
-    fetchTests()
-  }, [page])
+    return refetch()
+  }, [refetch])
 
   return (
     <div>
-      <PageHeader title="Marking Queue" description="Tests pending review with descriptive questions" />
+      <PageHeader
+        title="Marking Queue"
+        description="Tests pending review with descriptive questions"
+      />
 
       <Card className="mt-6">
         <CardContent>
           {loading ? (
-            <div className="py-12 flex justify-center"><Spinner /></div>
+            <div className="py-12 flex justify-center">
+              <Spinner />
+            </div>
           ) : tests.length === 0 ? (
             <EmptyState
               icon={PenLine}
@@ -73,18 +88,20 @@ export default function Marking() {
                 {tests.map((test) => (
                   <TableRow key={test.id}>
                     <TableCell>
-                      <p className="font-medium text-gray-900">{test.candidate_name}</p>
-                      <p className="text-xs text-gray-500">{test.candidate_cnic}</p>
+                      <p className="font-medium text-slate-900">{test.candidate_name}</p>
+                      <p className="text-xs text-slate-500">{test.candidate_cnic}</p>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm font-semibold text-gray-900">{test.test_id}</span>
+                      <span className="font-mono text-sm font-semibold text-slate-900">
+                        {test.test_id}
+                      </span>
                     </TableCell>
                     <TableCell>{test.total_marks}</TableCell>
-                    <TableCell>{test.submitted_at ? formatDateTime(test.submitted_at) : '—'}</TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                        Pending Review
-                      </span>
+                      {test.submitted_at ? formatDateTime(test.submitted_at) : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="warning">Pending Review</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button size="sm" onClick={() => navigate(`/admin/marking/${test.id}`)}>

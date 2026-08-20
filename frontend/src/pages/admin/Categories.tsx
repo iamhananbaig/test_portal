@@ -74,7 +74,10 @@ export default function Categories() {
 
   const toggleActive = async (cat: Category) => {
     await api.put(`/categories/${cat.id}`, { is_active: !cat.is_active })
-    setToast({ message: `Category ${cat.is_active ? 'deactivated' : 'activated'}.`, type: 'success' })
+    setToast({
+      message: `Category ${cat.is_active ? 'deactivated' : 'activated'}.`,
+      type: 'success',
+    })
     fetchCategories()
   }
 
@@ -90,13 +93,19 @@ export default function Categories() {
       <Card className="mt-6">
         <CardContent>
           {loading ? (
-            <div className="py-12 flex justify-center"><Spinner /></div>
+            <div className="py-12 flex justify-center">
+              <Spinner />
+            </div>
           ) : categories.length === 0 ? (
             <EmptyState
               icon={FolderOpen}
               message="No categories found"
               description="Create your first category to organize questions."
-              action={<Button onClick={openCreate} size="sm">Add Category</Button>}
+              action={
+                <Button onClick={openCreate} size="sm">
+                  Add Category
+                </Button>
+              }
             />
           ) : (
             <Table
@@ -109,7 +118,7 @@ export default function Categories() {
             >
               {categories.map((cat) => (
                 <TableRow key={cat.id}>
-                  <TableCell className="font-medium text-gray-900">{cat.name}</TableCell>
+                  <TableCell className="font-medium text-slate-900">{cat.name}</TableCell>
                   <TableCell>{cat.questions_count}</TableCell>
                   <TableCell>
                     <Badge variant={cat.is_active ? 'success' : 'gray'}>
@@ -117,7 +126,7 @@ export default function Categories() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <Button variant="ghost" size="sm" onClick={() => openEdit(cat)}>
                         Edit
                       </Button>

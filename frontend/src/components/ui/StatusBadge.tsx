@@ -17,12 +17,16 @@ const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 
   inactive: 'gray',
 }
 
-export function getStatusVariant(status: string): 'success' | 'warning' | 'danger' | 'info' | 'gray' {
+function getStatusVariant(
+  status: string,
+): 'success' | 'warning' | 'danger' | 'info' | 'gray' {
   return statusVariant[status] || 'gray'
 }
 
-export function formatStatus(status: string): string {
-  return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+function formatStatus(status: string): string {
+  return status
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (l) => l.toUpperCase())
 }
 
 export default function StatusBadge({ status, className }: StatusBadgeProps) {

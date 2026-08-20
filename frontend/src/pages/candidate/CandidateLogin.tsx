@@ -44,18 +44,18 @@ export default function CandidateLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-gray-50 px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30 px-4">
+      <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-200">
-            <span className="text-2xl font-bold text-white">T</span>
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-600/20">
+            <span className="text-xl font-bold text-white">T</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Candidate Portal</h1>
-          <p className="mt-2 text-gray-600">Enter your Test ID to continue</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Candidate Portal</h1>
+          <p className="mt-1.5 text-sm text-slate-500">Enter your Test ID to continue</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               label="Test ID"
               placeholder="e.g. A8KM-P2Q7"
@@ -67,13 +67,20 @@ export default function CandidateLogin() {
               autoComplete="off"
             />
 
-            <Button type="submit" className="w-full" size="lg" loading={loading} disabled={!testId.trim()} icon={<LogIn className="h-4 w-4" />}>
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              loading={loading}
+              disabled={!testId.trim()}
+              icon={<LogIn className="h-4 w-4" />}
+            >
               Continue
             </Button>
           </form>
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-5 text-center text-xs text-slate-400">
           Contact your administrator if you don&apos;t have a Test ID
         </p>
       </div>

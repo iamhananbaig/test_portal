@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { FileText, Plus } from 'lucide-react'
 import api from '../../services/api'
@@ -36,24 +36,33 @@ export default function TestList() {
   const [totalPages, setTotalPages] = useState(1)
   const debouncedSearch = useDebounce(filters.search, 300)
 
-  const fetchTests = async () => {
-    setLoading(true)
-    try {
+  const refetch = useCallback(() => {
+    let cancelled = false
+
+    async function load() {
       const params: Record<string, string | number> = { page }
       if (filters.status) params.status = filters.status
       if (debouncedSearch) params.search = debouncedSearch
 
       const response = await api.get('/tests', { params })
-      setTests(response.data.data)
-      setTotalPages(response.data.meta.last_page)
-    } finally {
-      setLoading(false)
+      if (!cancelled) {
+        setTests(response.data.data)
+        setTotalPages(response.data.meta.last_page)
+      }
     }
-  }
+
+    load().finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [page, filters.status, debouncedSearch])
 
   useEffect(() => {
-    fetchTests()
-  }, [filters.status, debouncedSearch, page])
+    return refetch()
+  }, [refetch])
 
   return (
     <div>
@@ -72,7 +81,10 @@ export default function TestList() {
             <Select
               label="Status"
               value={filters.status}
-              onChange={(e) => { setFilters({ ...filters, status: e.target.value }); setPage(1) }}
+              onChange={(e) => {
+                setFilters({ ...filters, status: e.target.value })
+                setPage(1)
+              }}
               options={[
                 { value: '', label: 'All' },
                 { value: 'ready', label: 'Ready' },
@@ -88,19 +100,28 @@ export default function TestList() {
                 label="Search"
                 placeholder="Search by name, CNIC, or Test ID..."
                 value={filters.search}
-                onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(1) }}
+                onChange={(e) => {
+                  setFilters({ ...filters, search: e.target.value })
+                  setPage(1)
+                }}
               />
             </div>
           </div>
 
           {loading ? (
-            <div className="py-12 flex justify-center"><Spinner /></div>
+            <div className="py-12 flex justify-center">
+              <Spinner />
+            </div>
           ) : tests.length === 0 ? (
             <EmptyState
               icon={FileText}
               message="No tests found"
               description="Create your first test to get started."
-              action={<Button onClick={() => navigate('/admin/tests/new')} size="sm">Create Test</Button>}
+              action={
+                <Button onClick={() => navigate('/admin/tests/new')} size="sm">
+                  Create Test
+                </Button>
+              }
             />
           ) : (
             <>
@@ -116,11 +137,13 @@ export default function TestList() {
                 {tests.map((test) => (
                   <TableRow key={test.id}>
                     <TableCell>
-                      <p className="font-medium text-gray-900">{test.candidate_name}</p>
-                      <p className="text-xs text-gray-500">{test.candidate_cnic}</p>
+                      <p className="font-medium text-slate-900">{test.candidate_name}</p>
+                      <p className="text-xs text-slate-500">{test.candidate_cnic}</p>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm font-semibold text-gray-900">{test.test_id}</span>
+                      <span className="font-mono text-sm font-semibold text-slate-900">
+                        {test.test_id}
+                      </span>
                     </TableCell>
                     <TableCell>{formatDateTime(test.created_at)}</TableCell>
                     <TableCell>{test.expires_at ? formatDateTime(test.expires_at) : '—'}</TableCell>

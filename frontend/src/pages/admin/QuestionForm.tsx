@@ -94,7 +94,9 @@ export default function QuestionForm() {
       navigate('/admin/questions')
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
+        const axiosErr = err as {
+          response?: { data?: { message?: string; errors?: Record<string, string[]> } }
+        }
         const errors = axiosErr.response?.data?.errors
         if (errors) {
           setError(Object.values(errors).flat().join(', '))
@@ -107,21 +109,32 @@ export default function QuestionForm() {
     }
   }
 
-  if (loading) return <div className="py-12 flex justify-center"><Spinner /></div>
+  if (loading)
+    return (
+      <div className="py-12 flex justify-center">
+        <Spinner />
+      </div>
+    )
 
   return (
     <div>
       <PageHeader
         title={isEditing ? 'Edit Question' : 'Add Question'}
         action={
-          <Button variant="secondary" onClick={() => navigate('/admin/questions')} icon={<ArrowLeft className="h-4 w-4" />}>
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/admin/questions')}
+            icon={<ArrowLeft className="h-4 w-4" />}
+          >
             Back
           </Button>
         }
       />
       <Card className="mt-6">
         <CardContent>
-          {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && (
+            <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
               label="Category"
@@ -162,8 +175,10 @@ export default function QuestionForm() {
           </div>
           {type === 'mcq' && (
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-700">Answer Options</h3>
-              <p className="mb-3 text-xs text-gray-500">Select the correct answer by clicking the radio button.</p>
+              <h3 className="text-sm font-medium text-slate-700">Answer Options</h3>
+              <p className="mb-3 text-xs text-slate-500">
+                Select the correct answer by clicking the radio button.
+              </p>
               <div className="space-y-3">
                 {options.map((opt, i) => (
                   <div key={opt.label} className="flex items-center gap-3">
@@ -172,14 +187,14 @@ export default function QuestionForm() {
                       name="correct_option"
                       checked={opt.is_correct}
                       onChange={() => setCorrectOption(i)}
-                      className="h-4 w-4 text-blue-600"
+                      className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500"
                     />
-                    <span className="w-6 text-sm font-medium text-gray-700">{opt.label}.</span>
+                    <span className="w-6 text-sm font-medium text-slate-500">{opt.label}.</span>
                     <input
                       type="text"
                       value={opt.text}
                       onChange={(e) => updateOptionText(i, e.target.value)}
-                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                       placeholder={`Option ${opt.label}`}
                     />
                   </div>
@@ -191,7 +206,11 @@ export default function QuestionForm() {
             <Button variant="secondary" onClick={() => navigate('/admin/questions')}>
               Cancel
             </Button>
-            <Button onClick={handleSave} loading={saving} disabled={!categoryId || !text.trim() || !marks}>
+            <Button
+              onClick={handleSave}
+              loading={saving}
+              disabled={!categoryId || !text.trim() || !marks}
+            >
               Save Question
             </Button>
           </div>

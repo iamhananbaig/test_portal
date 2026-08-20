@@ -9,16 +9,19 @@ interface ToastProps {
 }
 
 export default function Toast({ message, type, onClose, duration = 3000 }: ToastProps) {
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    setVisible(true)
-    const timer = setTimeout(() => {
-      setVisible(false)
-      setTimeout(onClose, 300)
-    }, duration)
+    const timer = setTimeout(() => setVisible(false), duration)
     return () => clearTimeout(timer)
-  }, [duration, onClose])
+  }, [duration])
+
+  useEffect(() => {
+    if (!visible) {
+      const timer = setTimeout(onClose, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [visible, onClose])
 
   return (
     <div
@@ -26,18 +29,21 @@ export default function Toast({ message, type, onClose, duration = 3000 }: Toast
         visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
       } ${
         type === 'success'
-          ? 'border-green-200 bg-green-50 text-green-800'
-          : 'border-red-200 bg-red-50 text-red-800'
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+          : 'border-rose-200 bg-rose-50 text-rose-800'
       }`}
     >
       {type === 'success' ? (
-        <CheckCircle className="h-5 w-5 flex-shrink-0" />
+        <CheckCircle className="h-4 w-4 flex-shrink-0" />
       ) : (
-        <XCircle className="h-5 w-5 flex-shrink-0" />
+        <XCircle className="h-4 w-4 flex-shrink-0" />
       )}
       <p className="text-sm font-medium">{message}</p>
-      <button onClick={onClose} className="ml-2 flex-shrink-0 text-current opacity-50 hover:opacity-100">
-        <X className="h-4 w-4" />
+      <button
+        onClick={onClose}
+        className="ml-2 flex-shrink-0 text-current opacity-50 hover:opacity-100"
+      >
+        <X className="h-3.5 w-3.5" />
       </button>
     </div>
   )

@@ -39,26 +39,35 @@ export default function MarkingDetail() {
   const [finalizing, setFinalizing] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await api.get(`/marking/${id}`)
-      setTestInfo(response.data.test)
-      setQuestions(response.data.questions)
+  const refetch = useCallback(() => {
+    let cancelled = false
 
-      const initialMarks: Record<number, string> = {}
-      response.data.questions.forEach((q: DescriptiveQuestion) => {
-        initialMarks[q.question_id] = q.awarded_marks !== null ? String(q.awarded_marks) : ''
-      })
-      setMarks(initialMarks)
-    } finally {
-      setLoading(false)
+    async function load() {
+      const response = await api.get(`/marking/${id}`)
+      if (!cancelled) {
+        setTestInfo(response.data.test)
+        setQuestions(response.data.questions)
+
+        const initialMarks: Record<number, string> = {}
+        response.data.questions.forEach((q: DescriptiveQuestion) => {
+          initialMarks[q.question_id] = q.awarded_marks !== null ? String(q.awarded_marks) : ''
+        })
+        setMarks(initialMarks)
+      }
+    }
+
+    load().finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+
+    return () => {
+      cancelled = true
     }
   }, [id])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    return refetch()
+  }, [refetch])
 
   const handleMarkChange = (questionId: number, value: string) => {
     setMarks((prev) => ({ ...prev, [questionId]: value }))
@@ -84,37 +93,52 @@ export default function MarkingDetail() {
 
       await api.put(`/marking/${id}`, { marks: marksPayload })
       setToast({ message: 'Marks saved successfully.', type: 'success' })
-      fetchData()
+      refetch()
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
-      setToast({ message: error.response?.data?.message || 'Failed to save marks.', type: 'error' })
+      setToast({
+        message: error.response?.data?.message || 'Failed to save marks.',
+        type: 'error',
+      })
     } finally {
       setSaving(false)
     }
   }
 
   const handleFinalize = async () => {
-    if (!window.confirm('Are you sure? This action cannot be undone. All marks will be finalized.')) return
+    if (
+      !window.confirm(
+        'Are you sure? This action cannot be undone. All marks will be finalized.',
+      )
+    )
+      return
 
     setFinalizing(true)
     try {
       await api.post(`/marking/${id}/finalize`)
       setToast({ message: 'Test finalized successfully.', type: 'success' })
-      fetchData()
+      refetch()
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
-      setToast({ message: error.response?.data?.message || 'Failed to finalize.', type: 'error' })
+      setToast({
+        message: error.response?.data?.message || 'Failed to finalize.',
+        type: 'error',
+      })
     } finally {
       setFinalizing(false)
     }
   }
 
   if (loading) {
-    return <div className="py-12 flex justify-center"><Spinner /></div>
+    return (
+      <div className="py-12 flex justify-center">
+        <Spinner />
+      </div>
+    )
   }
 
   if (!testInfo) {
-    return <p className="py-8 text-center text-gray-500">Test not found.</p>
+    return <p className="py-8 text-center text-slate-500">Test not found.</p>
   }
 
   const allMarked = questions.every((q) => marks[q.question_id] !== '')
@@ -128,7 +152,11 @@ export default function MarkingDetail() {
         title={`Marking: ${testInfo.test_id}`}
         description={`${testInfo.candidate_name} — ${testInfo.candidate_cnic}`}
         action={
-          <Button variant="secondary" onClick={() => navigate('/admin/marking')} icon={<ArrowLeft className="h-4 w-4" />}>
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/admin/marking')}
+            icon={<ArrowLeft className="h-4 w-4" />}
+          >
             Back to Queue
           </Button>
         }
@@ -140,22 +168,28 @@ export default function MarkingDetail() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm font-medium text-gray-500">Question {question.display_order}</span>
-                  <span className="ml-2 text-sm text-gray-500">— {question.category}</span>
+                  <span className="text-sm font-medium text-slate-500">
+                    Question {question.display_order}
+                  </span>
+                  <span className="ml-2 text-sm text-slate-400">— {question.category}</span>
                 </div>
-                <span className="text-sm font-medium text-gray-700">Max: {question.max_marks} marks</span>
+                <span className="text-sm font-medium text-slate-600">
+                  Max: {question.max_marks} marks
+                </span>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-900">{question.text}</p>
+              <p className="text-slate-900">{question.text}</p>
 
               {question.descriptive_answer ? (
-                <div className="mt-3 rounded-lg bg-gray-50 p-4">
-                  <p className="text-sm font-medium text-gray-700">Candidate Answer:</p>
-                  <p className="mt-1 whitespace-pre-wrap text-gray-900">{question.descriptive_answer}</p>
+                <div className="mt-3 rounded-lg bg-slate-50 p-4">
+                  <p className="text-sm font-medium text-slate-600">Candidate Answer:</p>
+                  <p className="mt-1 whitespace-pre-wrap text-slate-900">
+                    {question.descriptive_answer}
+                  </p>
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-gray-500">No answer submitted.</p>
+                <p className="mt-3 text-sm text-slate-400">No answer submitted.</p>
               )}
 
               <div className="mt-4">
@@ -181,7 +215,12 @@ export default function MarkingDetail() {
           <Button onClick={handleSave} loading={saving}>
             Save Marks
           </Button>
-          <Button variant="secondary" onClick={handleFinalize} loading={finalizing} disabled={!allMarked}>
+          <Button
+            variant="secondary"
+            onClick={handleFinalize}
+            loading={finalizing}
+            disabled={!allMarked}
+          >
             Finalize Test
           </Button>
         </div>

@@ -9,19 +9,19 @@ interface BadgeProps {
 }
 
 const variantClasses = {
-  success: 'bg-green-100 text-green-800',
-  warning: 'bg-yellow-100 text-yellow-800',
-  danger: 'bg-red-100 text-red-800',
-  info: 'bg-blue-100 text-blue-800',
-  gray: 'bg-gray-100 text-gray-800',
+  success: 'bg-emerald-50 text-emerald-700',
+  warning: 'bg-amber-50 text-amber-700',
+  danger: 'bg-rose-50 text-rose-700',
+  info: 'bg-primary-50 text-primary-700',
+  gray: 'bg-slate-100 text-slate-600',
 }
 
 const outlineClasses = {
-  success: 'border border-green-300 text-green-700 bg-transparent',
-  warning: 'border border-yellow-300 text-yellow-700 bg-transparent',
-  danger: 'border border-red-300 text-red-700 bg-transparent',
-  info: 'border border-blue-300 text-blue-700 bg-transparent',
-  gray: 'border border-gray-300 text-gray-700 bg-transparent',
+  success: 'border border-emerald-200 text-emerald-700 bg-transparent',
+  warning: 'border border-amber-200 text-amber-700 bg-transparent',
+  danger: 'border border-rose-200 text-rose-700 bg-transparent',
+  info: 'border border-primary-200 text-primary-700 bg-transparent',
+  gray: 'border border-slate-200 text-slate-600 bg-transparent',
 }
 
 const sizeClasses = {
@@ -29,7 +29,13 @@ const sizeClasses = {
   md: 'px-2.5 py-0.5 text-xs',
 }
 
-export default function Badge({ variant = 'gray', size = 'md', outline = false, children, className = '' }: BadgeProps) {
+export default function Badge({
+  variant = 'gray',
+  size = 'md',
+  outline = false,
+  children,
+  className = '',
+}: BadgeProps) {
   const classes = outline ? outlineClasses[variant] : variantClasses[variant]
   return (
     <span
