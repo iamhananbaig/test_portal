@@ -10,6 +10,10 @@ import QuestionBank from './pages/admin/QuestionBank'
 import QuestionForm from './pages/admin/QuestionForm'
 import TestCreate from './pages/admin/TestCreate'
 import TestList from './pages/admin/TestList'
+import CandidateLogin from './pages/candidate/CandidateLogin'
+import CandidateInstructions from './pages/candidate/CandidateInstructions'
+import CandidateTest from './pages/candidate/CandidateTest'
+import CandidateComplete from './pages/candidate/CandidateComplete'
 
 export default function App() {
   return (
@@ -39,7 +43,10 @@ export default function App() {
           <Route path="tests" element={<TestList />} />
           <Route path="tests/new" element={<TestCreate />} />
         </Route>
-        <Route path="/candidate" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold">Candidate Portal</h1><p className="mt-2 text-gray-600">Coming soon</p></div>} />
+        <Route path="/candidate" element={<CandidateLogin />} />
+        <Route path="/candidate/:testId/instructions" element={<CandidateInstructions />} />
+        <Route path="/candidate/:testId/test" element={<CandidateTest />} />
+        <Route path="/candidate/:testId/complete" element={<CandidateComplete />} />
       </Routes>
     </AuthProvider>
   )
