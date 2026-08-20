@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { ClipboardCopy, CheckCircle } from 'lucide-react'
@@ -43,7 +43,7 @@ export default function TestCreate() {
     },
   })
 
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<TestGenerateFormData>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<TestGenerateFormData>({
     resolver: zodResolver(testGenerateSchema),
     defaultValues: {
       candidate_name: '',
@@ -58,7 +58,8 @@ export default function TestCreate() {
     name: 'category_rows',
   })
 
-  const categoryRows = watch('category_rows')
+  const categoryRows = useWatch({ control, name: 'category_rows' })
+  const candidateName = useWatch({ control, name: 'candidate_name' })
 
   const generateMutation = useMutation({
     mutationFn: (payload: {
@@ -224,7 +225,7 @@ export default function TestCreate() {
           <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4 text-center">
             <CheckCircle className="mx-auto h-7 w-7 text-emerald-600 mb-2" />
             <p className="text-sm text-slate-500 dark:text-slate-400">Candidate</p>
-            <p className="font-semibold text-slate-900 dark:text-slate-100">{watch('candidate_name')}</p>
+            <p className="font-semibold text-slate-900 dark:text-slate-100">{candidateName}</p>
           </div>
           <div className="rounded-lg bg-primary-50 dark:bg-primary-900/20 p-4 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">Test ID</p>

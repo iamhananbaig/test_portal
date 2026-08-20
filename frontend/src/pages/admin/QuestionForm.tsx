@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, Upload, X, ImageIcon } from 'lucide-react'
 import api from '../../services/api'
@@ -55,7 +55,7 @@ export default function QuestionForm() {
   const [pendingOptionImages, setPendingOptionImages] = useState<(File | null)[]>([null, null, null, null])
   const questionImageRef = useRef<HTMLInputElement>(null)
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<QuestionFormData>({
+  const { register, handleSubmit, control, setValue, reset, formState: { errors } } = useForm<QuestionFormData>({
     resolver: zodResolver(questionSchema) as never,
     defaultValues: {
       category_id: '',
@@ -71,7 +71,7 @@ export default function QuestionForm() {
     },
   })
 
-  const watchType = watch('type')
+  const watchType = useWatch({ control, name: 'type' })
 
   const optionImagePreviews = useMemo(() => {
     return pendingOptionImages.map((file, i) => {
@@ -82,13 +82,17 @@ export default function QuestionForm() {
   }, [pendingOptionImages, options])
 
   useEffect(() => {
+    const urls = optionImagePreviews.filter((url): url is string => url !== null && url.startsWith('blob:'))
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [optionImagePreviews])
+
+  useEffect(() => {
     return () => {
       if (pendingQuestionImagePreview) URL.revokeObjectURL(pendingQuestionImagePreview)
-      optionImagePreviews.forEach((url) => {
-        if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
-      })
     }
-  }, [])
+  }, [pendingQuestionImagePreview])
 
   useEffect(() => {
     const fetchData = async () => {

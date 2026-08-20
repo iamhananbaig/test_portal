@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import api from '../../services/api'
@@ -41,11 +41,11 @@ export default function MarkingDetail() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const queryClient = useQueryClient()
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<MarkingFormData>({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<MarkingFormData>({
     defaultValues: { marks: {} },
   })
 
-  const marksValues = watch('marks')
+  const marksValues = useWatch({ control, name: 'marks' })
 
   const { data, isLoading } = useQuery({
     queryKey: ['marking', id],

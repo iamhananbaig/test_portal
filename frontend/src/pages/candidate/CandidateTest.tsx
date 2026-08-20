@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Flag, AlertTriangle, Sun, Moon, Menu, X, ImageIcon } from 'lucide-react'
 import { candidateApi } from '../../services/api'
-import { useTheme } from '../../context/ThemeContext'
+import { useTheme } from '../../context/useTheme'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import Skeleton from '../../components/ui/Skeleton'
@@ -324,7 +324,6 @@ export default function CandidateTest() {
   }
 
   const handleAnswerImageRemove = () => {
-    setPendingImageFile(null)
     if (pendingImagePreview) {
       URL.revokeObjectURL(pendingImagePreview)
     }
