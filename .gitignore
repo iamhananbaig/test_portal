@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+dist/
+build/
+public/build/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE files
+.idea/
+.vscode/
+.cursor/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Storage
+api/storage/app/uploads/
