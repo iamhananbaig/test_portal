@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tests', function (Blueprint $table) {
             $table->id();
-            $table->string('test_id', 8)->unique();
+            $table->string('test_id', 9)->unique();
             $table->string('candidate_name');
             $table->string('candidate_cnic', 15);
             $table->integer('duration_minutes');
