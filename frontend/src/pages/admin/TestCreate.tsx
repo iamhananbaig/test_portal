@@ -6,6 +6,7 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import Card, { CardContent } from '../../components/ui/Card'
 import Modal from '../../components/ui/Modal'
+import { formatTime } from '../../utils/dates'
 
 interface Category {
   id: number
@@ -198,7 +199,7 @@ export default function TestCreate() {
             <p className="text-2xl font-bold tracking-wider text-blue-700">{generatedTestId}</p>
           </div>
           <div className="text-center text-sm text-gray-500">
-            Valid until: {new Date(generatedExpiry).toLocaleTimeString()}
+            Valid until: {formatTime(generatedExpiry)}
           </div>
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1" onClick={copyTestId}>

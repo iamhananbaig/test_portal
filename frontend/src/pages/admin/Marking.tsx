@@ -4,6 +4,7 @@ import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Card, { CardContent } from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
+import { formatDateTime } from '../../utils/dates'
 
 interface Test {
   id: number
@@ -72,7 +73,7 @@ export default function Marking() {
                       <td className="py-3 font-mono text-sm font-semibold text-gray-900">{test.test_id}</td>
                       <td className="py-3 text-gray-600">{test.total_marks}</td>
                       <td className="py-3 text-gray-600">
-                        {test.submitted_at ? new Date(test.submitted_at).toLocaleString() : '—'}
+                        {test.submitted_at ? formatDateTime(test.submitted_at) : '—'}
                       </td>
                       <td className="py-3">
                         <Badge variant="warning">Pending Review</Badge>

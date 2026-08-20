@@ -7,6 +7,7 @@ import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 import Card, { CardContent } from '../../components/ui/Card'
 import { useDebounce } from '../../hooks/useDebounce'
+import { formatDateTime } from '../../utils/dates'
 
 interface Result {
   id: number
@@ -122,7 +123,7 @@ export default function Results() {
                         )}
                       </td>
                       <td className="py-3 text-gray-600">
-                        {result.submitted_at ? new Date(result.submitted_at).toLocaleString() : '—'}
+                        {result.submitted_at ? formatDateTime(result.submitted_at) : '—'}
                       </td>
                       <td className="py-3">
                         <Badge variant={statusVariant[result.status] || 'gray'}>

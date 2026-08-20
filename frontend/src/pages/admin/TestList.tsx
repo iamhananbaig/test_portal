@@ -7,6 +7,7 @@ import Select from '../../components/ui/Select'
 import Badge from '../../components/ui/Badge'
 import Card, { CardContent } from '../../components/ui/Card'
 import { useDebounce } from '../../hooks/useDebounce'
+import { formatDateTime } from '../../utils/dates'
 
 interface Test {
   id: number
@@ -121,10 +122,10 @@ export default function TestList() {
                       </td>
                       <td className="py-3 font-mono text-sm font-semibold text-gray-900">{test.test_id}</td>
                       <td className="py-3 text-gray-600">
-                        {new Date(test.created_at).toLocaleString()}
+                        {formatDateTime(test.created_at)}
                       </td>
                       <td className="py-3 text-gray-600">
-                        {test.expires_at ? new Date(test.expires_at).toLocaleString() : '—'}
+                        {test.expires_at ? formatDateTime(test.expires_at) : '—'}
                       </td>
                       <td className="py-3">
                         <Badge variant={statusVariant[test.status] || 'gray'}>

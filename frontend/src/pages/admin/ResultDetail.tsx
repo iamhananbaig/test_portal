@@ -4,6 +4,7 @@ import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Card, { CardContent, CardHeader } from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
+import { formatDateTime } from '../../utils/dates'
 
 interface TestInfo {
   id: number
@@ -154,19 +155,19 @@ export default function ResultDetail() {
               <div className="flex justify-between">
                 <dt className="text-gray-500">Created</dt>
                 <dd className="font-medium text-gray-900">
-                  {new Date(testInfo.created_at).toLocaleString()}
+                  {formatDateTime(testInfo.created_at)}
                 </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-gray-500">Started</dt>
                 <dd className="font-medium text-gray-900">
-                  {testInfo.started_at ? new Date(testInfo.started_at).toLocaleString() : '—'}
+                  {testInfo.started_at ? formatDateTime(testInfo.started_at) : '—'}
                 </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-gray-500">Submitted</dt>
                 <dd className="font-medium text-gray-900">
-                  {testInfo.submitted_at ? new Date(testInfo.submitted_at).toLocaleString() : '—'}
+                  {testInfo.submitted_at ? formatDateTime(testInfo.submitted_at) : '—'}
                 </dd>
               </div>
               <div className="flex justify-between">
