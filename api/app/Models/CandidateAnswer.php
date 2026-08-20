@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['test_id', 'question_id', 'selected_option_id', 'descriptive_answer', 'is_flagged', 'time_spent_seconds'])]
+#[Fillable(['test_id', 'question_id', 'selected_option_id', 'descriptive_answer', 'awarded_marks', 'is_flagged', 'time_spent_seconds'])]
 class CandidateAnswer extends Model
 {
     use HasFactory;
@@ -19,6 +19,7 @@ class CandidateAnswer extends Model
         return [
             'is_flagged' => 'boolean',
             'time_spent_seconds' => 'integer',
+            'awarded_marks' => 'decimal:2',
             'updated_at' => 'datetime',
         ];
     }
