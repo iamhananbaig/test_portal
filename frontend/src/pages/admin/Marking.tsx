@@ -88,11 +88,11 @@ export default function Marking() {
                 {tests.map((test) => (
                   <TableRow key={test.id}>
                     <TableCell>
-                      <p className="font-medium text-slate-900">{test.candidate_name}</p>
-                      <p className="text-xs text-slate-500">{test.candidate_cnic}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{test.candidate_name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{test.candidate_cnic}</p>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm font-semibold text-slate-900">
+                      <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {test.test_id}
                       </span>
                     </TableCell>

@@ -125,21 +125,21 @@ export default function Results() {
                 {results.map((result) => (
                   <TableRow key={result.id}>
                     <TableCell>
-                      <p className="font-medium text-slate-900">{result.candidate_name}</p>
-                      <p className="text-xs text-slate-500">{result.candidate_cnic}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{result.candidate_name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{result.candidate_cnic}</p>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm font-semibold text-slate-900">
+                      <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {result.test_id}
                       </span>
                     </TableCell>
                     <TableCell>
                       {result.total_obtained !== null ? (
-                        <span className="font-semibold text-slate-900">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">
                           {result.total_obtained} / {result.total_marks}
                         </span>
                       ) : (
-                        <span className="text-slate-400">—</span>
+                        <span className="text-slate-400 dark:text-slate-500">—</span>
                       )}
                     </TableCell>
                     <TableCell>

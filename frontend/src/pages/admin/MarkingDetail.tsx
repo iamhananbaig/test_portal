@@ -138,7 +138,7 @@ export default function MarkingDetail() {
   }
 
   if (!testInfo) {
-    return <p className="py-8 text-center text-slate-500">Test not found.</p>
+    return <p className="py-8 text-center text-slate-500 dark:text-slate-400">Test not found.</p>
   }
 
   const allMarked = questions.every((q) => marks[q.question_id] !== '')
@@ -168,28 +168,28 @@ export default function MarkingDetail() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm font-medium text-slate-500">
+                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
                     Question {question.display_order}
                   </span>
-                  <span className="ml-2 text-sm text-slate-400">— {question.category}</span>
+                  <span className="ml-2 text-sm text-slate-400 dark:text-slate-500">— {question.category}</span>
                 </div>
-                <span className="text-sm font-medium text-slate-600">
+                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                   Max: {question.max_marks} marks
                 </span>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-900">{question.text}</p>
+              <p className="text-slate-900 dark:text-slate-100">{question.text}</p>
 
               {question.descriptive_answer ? (
-                <div className="mt-3 rounded-lg bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-600">Candidate Answer:</p>
-                  <p className="mt-1 whitespace-pre-wrap text-slate-900">
+                <div className="mt-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 p-4">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Candidate Answer:</p>
+                  <p className="mt-1 whitespace-pre-wrap text-slate-900 dark:text-slate-100">
                     {question.descriptive_answer}
                   </p>
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-slate-400">No answer submitted.</p>
+                <p className="mt-3 text-sm text-slate-400 dark:text-slate-500">No answer submitted.</p>
               )}
 
               <div className="mt-4">

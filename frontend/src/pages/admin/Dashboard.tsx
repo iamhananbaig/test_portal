@@ -77,7 +77,7 @@ export default function Dashboard() {
   }
 
   if (!stats) {
-    return <p className="py-8 text-center text-slate-500">Failed to load stats.</p>
+    return <p className="py-8 text-center text-slate-500 dark:text-slate-400">Failed to load stats.</p>
   }
 
   return (
@@ -93,11 +93,11 @@ export default function Dashboard() {
                   <Icon className={`h-4 w-4 ${color}`} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">{label}</p>
-                  <p className="text-xl font-semibold text-slate-900">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+                  <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {stats[key]}
                     {key === 'total_questions' && (
-                      <span className="ml-1 text-xs font-normal text-slate-400">
+                      <span className="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500">
                         ({stats.active_questions} active)
                       </span>
                     )}
@@ -111,17 +111,17 @@ export default function Dashboard() {
 
       <Card className="mt-6">
         <CardHeader>
-          <h2 className="text-sm font-semibold text-slate-900">Tests by Status</h2>
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Tests by Status</h2>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {Object.entries(stats.tests_by_status).map(([status, count]) => (
               <div
                 key={status}
-                className="flex flex-col items-center rounded-lg border border-slate-100 p-3 text-center"
+                className="flex flex-col items-center rounded-lg border border-slate-100 dark:border-slate-700 p-3 text-center"
               >
                 <StatusBadge status={status} />
-                <span className="mt-2 text-lg font-semibold text-slate-900">
+                <span className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
                   {count as number}
                 </span>
               </div>

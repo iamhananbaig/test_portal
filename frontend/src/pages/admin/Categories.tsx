@@ -118,7 +118,7 @@ export default function Categories() {
             >
               {categories.map((cat) => (
                 <TableRow key={cat.id}>
-                  <TableCell className="font-medium text-slate-900">{cat.name}</TableCell>
+                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">{cat.name}</TableCell>
                   <TableCell>{cat.questions_count}</TableCell>
                   <TableCell>
                     <Badge variant={cat.is_active ? 'success' : 'gray'}>

@@ -118,10 +118,10 @@ export default function TestCreate() {
       <Card className="mt-6">
         <CardContent>
           {error && (
-            <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</div>
+            <div className="mb-4 rounded-lg bg-rose-50 dark:bg-rose-900/20 p-3 text-sm text-rose-700 dark:text-rose-400">{error}</div>
           )}
 
-          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Candidate Information
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -139,7 +139,7 @@ export default function TestCreate() {
             />
           </div>
 
-          <h2 className="mb-4 mt-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <h2 className="mb-4 mt-6 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Test Configuration
           </h2>
           <div className="space-y-3">
@@ -215,18 +215,18 @@ export default function TestCreate() {
         title="Test Generated"
       >
         <div className="space-y-4">
-          <div className="rounded-lg bg-emerald-50 p-4 text-center">
+          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4 text-center">
             <CheckCircle className="mx-auto h-7 w-7 text-emerald-600 mb-2" />
-            <p className="text-sm text-slate-500">Candidate</p>
-            <p className="font-semibold text-slate-900">{candidateName}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Candidate</p>
+            <p className="font-semibold text-slate-900 dark:text-slate-100">{candidateName}</p>
           </div>
           <div className="rounded-lg bg-primary-50 p-4 text-center">
-            <p className="text-sm text-slate-500">Test ID</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Test ID</p>
             <p className="text-2xl font-bold tracking-wider text-primary-700">
               {generatedTestId}
             </p>
           </div>
-          <div className="text-center text-sm text-slate-500">
+          <div className="text-center text-sm text-slate-500 dark:text-slate-400">
             Valid until: {formatTime(generatedExpiry)}
           </div>
           <div className="flex gap-2">

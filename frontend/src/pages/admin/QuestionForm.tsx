@@ -133,7 +133,7 @@ export default function QuestionForm() {
       <Card className="mt-6">
         <CardContent>
           {error && (
-            <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</div>
+            <div className="mb-4 rounded-lg bg-rose-50 dark:bg-rose-900/20 p-3 text-sm text-rose-700 dark:text-rose-400">{error}</div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
@@ -175,8 +175,8 @@ export default function QuestionForm() {
           </div>
           {type === 'mcq' && (
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-slate-700">Answer Options</h3>
-              <p className="mb-3 text-xs text-slate-500">
+              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Answer Options</h3>
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
                 Select the correct answer by clicking the radio button.
               </p>
               <div className="space-y-3">
@@ -189,7 +189,7 @@ export default function QuestionForm() {
                       onChange={() => setCorrectOption(i)}
                       className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500"
                     />
-                    <span className="w-6 text-sm font-medium text-slate-500">{opt.label}.</span>
+                    <span className="w-6 text-sm font-medium text-slate-500 dark:text-slate-400">{opt.label}.</span>
                     <Input
                       value={opt.text}
                       onChange={(e) => updateOptionText(i, e.target.value)}
