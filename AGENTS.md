@@ -80,12 +80,16 @@ cd api && npm run build         # vite build (Blade assets)
 ## Frontend Conventions
 
 - **Tailwind v4** with custom theme tokens in `frontend/src/index.css` — uses `@theme` directive, not `tailwind.config.js`
-- Custom color palette: `primary-*` (indigo), `slate-*` (neutrals), semantic `emerald-*`, `amber-*`, `rose-*`
+- Custom color palette: `primary-*` (blue), `slate-*` (neutrals), semantic `emerald-*`, `amber-*`, `rose-*`, `violet-*`
+- Font: **Plus Jakarta Sans** (defined in `index.css`), not Inter
 - Reusable UI components in `frontend/src/components/ui/` (Button, Input, Card, Table, Modal, etc.)
 - **lucide-react** for icons (not heroicons or fontawesome)
 - **axios** for API calls with JWT interceptor in `frontend/src/services/api.ts`
+  - `default export api` — admin API client (attaches Bearer token, redirects to `/admin/login` on 401)
+  - `candidateApi` — public candidate API client (no auth headers)
 - **react-router v8** for routing. Admin routes under `/admin`, candidate routes under `/candidate`.
 - Auth context at `frontend/src/context/AuthContext.tsx` — stores token + user in localStorage
+- Vite dev server proxies `/api` to `http://127.0.0.1:8000` (backend)
 - Pages export default functions, no barrel exports
 
 ## Database
