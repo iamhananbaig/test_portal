@@ -18,7 +18,7 @@ export default function Table({ columns, children, caption }: TableProps) {
       <table className="w-full text-left text-sm">
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead>
-          <tr className="border-b border-slate-200 text-slate-500">
+          <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
             {columns.map((col) => (
               <th
                 key={col.key}
@@ -44,7 +44,7 @@ interface TableRowProps {
 export function TableRow({ children, className = '' }: TableRowProps) {
   return (
     <tr
-      className={`border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors ${className}`}
+      className={`border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50/60 dark:hover:bg-slate-700/50 transition-colors ${className}`}
     >
       {children}
     </tr>

@@ -12,7 +12,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
 
   return (
     <div className="mt-4 flex items-center justify-between">
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-slate-500 dark:text-slate-400">
         Page {page} of {totalPages}
       </p>
       <div className="flex gap-2">

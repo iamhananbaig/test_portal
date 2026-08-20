@@ -29,8 +29,8 @@ export default function Toast({ message, type, onClose, duration = 3000 }: Toast
         visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
       } ${
         type === 'success'
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-          : 'border-rose-200 bg-rose-50 text-rose-800'
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
+          : 'border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-900/40 dark:text-rose-300'
       }`}
     >
       {type === 'success' ? (
