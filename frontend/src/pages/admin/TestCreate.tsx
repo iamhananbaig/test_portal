@@ -164,8 +164,8 @@ export default function TestCreate() {
                 <div className="w-32">
                   <Input
                     label={index === 0 ? 'Questions' : undefined}
-                    type="number"
-                    min="1"
+                    type="text"
+                    inputMode="numeric"
                     {...register(`category_rows.${index}.count`)}
                     error={errors.category_rows?.[index]?.count?.message}
                     placeholder="Count"
@@ -191,8 +191,8 @@ export default function TestCreate() {
           <div className="mt-6">
             <Input
               label="Duration (minutes)"
-              type="number"
-              min="1"
+              type="text"
+              inputMode="numeric"
               {...register('duration')}
               error={errors.duration?.message}
               placeholder="e.g. 60"

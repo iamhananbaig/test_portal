@@ -375,9 +375,8 @@ export default function QuestionForm() {
           <div className="mt-4">
             <Input
               label="Marks"
-              type="number"
-              min="0.5"
-              step="0.5"
+              type="text"
+              inputMode="numeric"
               {...register('marks')}
               error={errors.marks?.message}
               placeholder="e.g. 4"

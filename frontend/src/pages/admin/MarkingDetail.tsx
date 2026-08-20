@@ -214,10 +214,8 @@ export default function MarkingDetail() {
               <div className="mt-4">
                 <Input
                   label="Awarded Marks"
-                  type="number"
-                  min="0"
-                  max={question.max_marks}
-                  step="0.5"
+                  type="text"
+                  inputMode="numeric"
                   {...register(`marks.${question.question_id}`)}
                   error={errors.marks?.[question.question_id]?.message}
                   disabled={isCompleted}
