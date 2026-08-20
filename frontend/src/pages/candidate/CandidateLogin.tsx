@@ -1,32 +1,37 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { LogIn } from 'lucide-react'
 import { candidateApi } from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
+import { candidateLoginSchema } from '../../lib/validations'
 
 export default function CandidateLogin() {
-  const [testId, setTestId] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(candidateLoginSchema),
+  })
+
+  const onSubmit = async (data: { test_id: string }) => {
     setError('')
     setLoading(true)
 
     try {
-      const { data } = await candidateApi.post('/candidate/validate', {
-        test_id: testId.trim().toUpperCase(),
+      const { data: response } = await candidateApi.post('/candidate/validate', {
+        test_id: data.test_id.trim().toUpperCase(),
       })
 
-      if (data.status === 'in_progress') {
-        navigate(`/candidate/${testId.trim().toUpperCase()}/test`)
-      } else if (data.status === 'ready') {
-        navigate(`/candidate/${testId.trim().toUpperCase()}/instructions`)
+      if (response.status === 'in_progress') {
+        navigate(`/candidate/${data.test_id.trim().toUpperCase()}/test`)
+      } else if (response.status === 'ready') {
+        navigate(`/candidate/${data.test_id.trim().toUpperCase()}/instructions`)
       } else {
-        setError(data.message || 'Test cannot be accessed')
+        setError(response.message || 'Test cannot be accessed')
       }
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
@@ -52,14 +57,12 @@ export default function CandidateLogin() {
         </div>
 
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <Input
               label="Test ID"
               placeholder="e.g. A8KM-P2Q7"
-              value={testId}
-              onChange={(e) => setTestId(e.target.value.toUpperCase())}
-              error={error}
-              required
+              {...register('test_id')}
+              error={errors.test_id?.message || error}
               autoFocus
               autoComplete="off"
             />
@@ -69,7 +72,6 @@ export default function CandidateLogin() {
               className="w-full"
               size="lg"
               loading={loading}
-              disabled={!testId.trim()}
               icon={<LogIn className="h-4 w-4" />}
             >
               Continue

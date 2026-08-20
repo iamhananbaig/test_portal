@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
+import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -28,18 +29,27 @@ interface DescriptiveQuestion {
   awarded_marks: number | null
 }
 
+interface MarkingFormData {
+  marks: Record<string, string>
+}
+
 export default function MarkingDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [testInfo, setTestInfo] = useState<TestInfo | null>(null)
   const [questions, setQuestions] = useState<DescriptiveQuestion[]>([])
-  const [marks, setMarks] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [finalizing, setFinalizing] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
-  const refetch = useCallback(() => {
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<MarkingFormData>({
+    defaultValues: { marks: {} },
+  })
+
+  const marksValues = watch('marks')
+
+  useEffect(() => {
     let cancelled = false
 
     async function load() {
@@ -48,11 +58,11 @@ export default function MarkingDetail() {
         setTestInfo(response.data.test)
         setQuestions(response.data.questions)
 
-        const initialMarks: Record<number, string> = {}
+        const initialMarks: Record<string, string> = {}
         response.data.questions.forEach((q: DescriptiveQuestion) => {
           initialMarks[q.question_id] = q.awarded_marks !== null ? String(q.awarded_marks) : ''
         })
-        setMarks(initialMarks)
+        reset({ marks: initialMarks })
       }
     }
 
@@ -63,23 +73,15 @@ export default function MarkingDetail() {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, reset])
 
-  useEffect(() => {
-    return refetch()
-  }, [refetch])
-
-  const handleMarkChange = (questionId: number, value: string) => {
-    setMarks((prev) => ({ ...prev, [questionId]: value }))
-  }
-
-  const handleSave = async () => {
+  const onSave = async (data: MarkingFormData) => {
     setSaving(true)
     try {
       const marksPayload = questions
-        .filter((q) => marks[q.question_id] !== '')
+        .filter((q) => data.marks[q.question_id] !== '' && data.marks[q.question_id] !== undefined)
         .map((q) => {
-          const parsed = parseFloat(marks[q.question_id])
+          const parsed = parseFloat(data.marks[q.question_id])
           return {
             question_id: q.question_id,
             awarded_marks: isNaN(parsed) ? 0 : Math.min(Math.max(parsed, 0), q.max_marks),
@@ -93,7 +95,6 @@ export default function MarkingDetail() {
 
       await api.put(`/marking/${id}`, { marks: marksPayload })
       setToast({ message: 'Marks saved successfully.', type: 'success' })
-      refetch()
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
       setToast({
@@ -117,7 +118,6 @@ export default function MarkingDetail() {
     try {
       await api.post(`/marking/${id}/finalize`)
       setToast({ message: 'Test finalized successfully.', type: 'success' })
-      refetch()
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
       setToast({
@@ -152,7 +152,7 @@ export default function MarkingDetail() {
     return <p className="py-8 text-center text-slate-500 dark:text-slate-400">Test not found.</p>
   }
 
-  const allMarked = questions.every((q) => marks[q.question_id] !== '')
+  const allMarked = questions.every((q) => marksValues[q.question_id] !== '' && marksValues[q.question_id] !== undefined)
   const isCompleted = testInfo.status === 'completed'
 
   return (
@@ -210,8 +210,8 @@ export default function MarkingDetail() {
                   min="0"
                   max={question.max_marks}
                   step="0.5"
-                  value={marks[question.question_id] || ''}
-                  onChange={(e) => handleMarkChange(question.question_id, e.target.value)}
+                  {...register(`marks.${question.question_id}`)}
+                  error={errors.marks?.[question.question_id]?.message}
                   disabled={isCompleted}
                   placeholder={`0 - ${question.max_marks}`}
                 />
@@ -223,7 +223,7 @@ export default function MarkingDetail() {
 
       {!isCompleted && (
         <div className="mt-6 flex gap-3">
-          <Button onClick={handleSave} loading={saving}>
+          <Button onClick={handleSubmit(onSave)} loading={saving}>
             Save Marks
           </Button>
           <Button

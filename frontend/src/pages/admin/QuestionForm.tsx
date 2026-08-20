@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -9,6 +11,7 @@ import Textarea from '../../components/ui/Textarea'
 import Card, { CardContent } from '../../components/ui/Card'
 import Skeleton from '../../components/ui/Skeleton'
 import PageHeader from '../../components/ui/PageHeader'
+import { questionSchema } from '../../lib/validations'
 
 interface Category {
   id: number
@@ -21,6 +24,14 @@ interface Option {
   is_correct: boolean
 }
 
+interface QuestionFormData {
+  category_id: string
+  type: string
+  text: string
+  marks: string
+  options?: Option[]
+}
+
 export default function QuestionForm() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -29,10 +40,6 @@ export default function QuestionForm() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [categoryId, setCategoryId] = useState('')
-  const [type, setType] = useState('mcq')
-  const [text, setText] = useState('')
-  const [marks, setMarks] = useState('')
   const [options, setOptions] = useState<Option[]>([
     { label: 'A', text: '', is_correct: false },
     { label: 'B', text: '', is_correct: false },
@@ -40,6 +47,24 @@ export default function QuestionForm() {
     { label: 'D', text: '', is_correct: false },
   ])
   const [error, setError] = useState('')
+
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<QuestionFormData>({
+    resolver: zodResolver(questionSchema) as never,
+    defaultValues: {
+      category_id: '',
+      type: 'mcq',
+      text: '',
+      marks: '',
+      options: [
+        { label: 'A', text: '', is_correct: false },
+        { label: 'B', text: '', is_correct: false },
+        { label: 'C', text: '', is_correct: false },
+        { label: 'D', text: '', is_correct: false },
+      ],
+    },
+  })
+
+  const watchType = watch('type')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,10 +75,18 @@ export default function QuestionForm() {
         if (isEditing) {
           const qRes = await api.get(`/questions/${id}`)
           const q = qRes.data.data
-          setCategoryId(String(q.category_id))
-          setType(q.type)
-          setText(q.text)
-          setMarks(String(q.marks))
+          reset({
+            category_id: String(q.category_id),
+            type: q.type,
+            text: q.text,
+            marks: String(q.marks),
+            options: q.options?.length ? q.options : [
+              { label: 'A', text: '', is_correct: false },
+              { label: 'B', text: '', is_correct: false },
+              { label: 'C', text: '', is_correct: false },
+              { label: 'D', text: '', is_correct: false },
+            ],
+          })
           if (q.options?.length) {
             setOptions(q.options)
           }
@@ -63,27 +96,31 @@ export default function QuestionForm() {
       }
     }
     fetchData()
-  }, [id, isEditing])
+  }, [id, isEditing, reset])
 
   const setCorrectOption = (index: number) => {
-    setOptions(options.map((opt, i) => ({ ...opt, is_correct: i === index })))
+    const updated = options.map((opt, i) => ({ ...opt, is_correct: i === index }))
+    setOptions(updated)
+    setValue('options', updated)
   }
 
   const updateOptionText = (index: number, value: string) => {
-    setOptions(options.map((opt, i) => (i === index ? { ...opt, text: value } : opt)))
+    const updated = options.map((opt, i) => (i === index ? { ...opt, text: value } : opt))
+    setOptions(updated)
+    setValue('options', updated)
   }
 
-  const handleSave = async () => {
+  const onSubmit = async (data: QuestionFormData) => {
     setError('')
     setSaving(true)
     try {
       const payload: Record<string, unknown> = {
-        category_id: Number(categoryId),
-        type,
-        text,
-        marks: Number(marks),
+        category_id: Number(data.category_id),
+        type: data.type,
+        text: data.text,
+        marks: Number(data.marks),
       }
-      if (type === 'mcq') {
+      if (data.type === 'mcq') {
         payload.options = options
       }
       if (isEditing) {
@@ -148,15 +185,15 @@ export default function QuestionForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
               label="Category"
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              {...register('category_id')}
+              error={errors.category_id?.message}
               options={categories.map((c) => ({ value: c.id, label: c.name }))}
               placeholder="Select category"
             />
             <Select
               label="Type"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
+              {...register('type')}
+              error={errors.type?.message}
               options={[
                 { value: 'mcq', label: 'MCQ' },
                 { value: 'descriptive', label: 'Descriptive' },
@@ -166,8 +203,8 @@ export default function QuestionForm() {
           <div className="mt-4">
             <Textarea
               label="Question Text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
+              {...register('text')}
+              error={errors.text?.message}
               rows={4}
               placeholder="Enter question text..."
             />
@@ -178,12 +215,12 @@ export default function QuestionForm() {
               type="number"
               min="0.5"
               step="0.5"
-              value={marks}
-              onChange={(e) => setMarks(e.target.value)}
+              {...register('marks')}
+              error={errors.marks?.message}
               placeholder="e.g. 4"
             />
           </div>
-          {type === 'mcq' && (
+          {watchType === 'mcq' && (
             <div className="mt-6">
               <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Answer Options</h3>
               <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
@@ -216,9 +253,8 @@ export default function QuestionForm() {
               Cancel
             </Button>
             <Button
-              onClick={handleSave}
+              onClick={handleSubmit(onSubmit)}
               loading={saving}
-              disabled={!categoryId || !text.trim() || !marks}
             >
               Save Question
             </Button>

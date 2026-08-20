@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { FolderOpen } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -11,6 +13,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import Toast from '../../components/ui/Toast'
 import PageHeader from '../../components/ui/PageHeader'
 import Badge from '../../components/ui/Badge'
+import { categorySchema } from '../../lib/validations'
 
 interface Category {
   id: number
@@ -24,9 +27,12 @@ export default function Categories() {
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
-  const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    resolver: zodResolver(categorySchema),
+  })
 
   const fetchCategories = async () => {
     try {
@@ -37,30 +43,26 @@ export default function Categories() {
     }
   }
 
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
   const openCreate = () => {
     setEditingCategory(null)
-    setName('')
+    reset()
     setModalOpen(true)
   }
 
   const openEdit = (cat: Category) => {
     setEditingCategory(cat)
-    setName(cat.name)
+    reset({ name: cat.name })
     setModalOpen(true)
   }
 
-  const handleSave = async () => {
+  const onSubmit = async (data: { name: string }) => {
     setSaving(true)
     try {
       if (editingCategory) {
-        await api.put(`/categories/${editingCategory.id}`, { name })
+        await api.put(`/categories/${editingCategory.id}`, { name: data.name })
         setToast({ message: 'Category updated.', type: 'success' })
       } else {
-        await api.post('/categories', { name })
+        await api.post('/categories', { name: data.name })
         setToast({ message: 'Category created.', type: 'success' })
       }
       setModalOpen(false)
@@ -158,7 +160,7 @@ export default function Categories() {
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} loading={saving} disabled={!name.trim()}>
+            <Button onClick={handleSubmit(onSubmit)} loading={saving}>
               Save
             </Button>
           </>
@@ -166,8 +168,8 @@ export default function Categories() {
       >
         <Input
           label="Category Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          {...register('name')}
+          error={errors.name?.message}
           placeholder="e.g. Accounting"
         />
       </Modal>

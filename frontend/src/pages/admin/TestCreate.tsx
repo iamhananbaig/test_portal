@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { ClipboardCopy, CheckCircle } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -9,62 +11,69 @@ import Card, { CardContent } from '../../components/ui/Card'
 import Modal from '../../components/ui/Modal'
 import PageHeader from '../../components/ui/PageHeader'
 import { formatTime } from '../../utils/dates'
+import { testGenerateSchema } from '../../lib/validations'
 
 interface Category {
   id: number
   name: string
+  is_active: boolean
 }
 
-interface CategoryRow {
-  category_id: string
-  count: string
+type TestGenerateFormData = {
+  candidate_name: string
+  candidate_cnic: string
+  duration: string
+  category_rows: { category_id: string; count: string }[]
 }
 
 export default function TestCreate() {
   const navigate = useNavigate()
   const [categories, setCategories] = useState<Category[]>([])
-  const [candidateName, setCandidateName] = useState('')
-  const [candidateCnic, setCandidateCnic] = useState('')
-  const [duration, setDuration] = useState('60')
-  const [categoryRows, setCategoryRows] = useState<CategoryRow[]>([
-    { category_id: '', count: '' },
-  ])
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [successModal, setSuccessModal] = useState(false)
   const [generatedTestId, setGeneratedTestId] = useState('')
   const [generatedExpiry, setGeneratedExpiry] = useState('')
   const [copied, setCopied] = useState(false)
 
+  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<TestGenerateFormData>({
+    resolver: zodResolver(testGenerateSchema),
+    defaultValues: {
+      candidate_name: '',
+      candidate_cnic: '',
+      duration: '60',
+      category_rows: [{ category_id: '', count: '' }],
+    },
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'category_rows',
+  })
+
+  const categoryRows = watch('category_rows')
+
   useEffect(() => {
     const fetchCategories = async () => {
       const response = await api.get('/categories', { params: { per_page: 100 } })
       setCategories(
-        response.data.data.filter((c: Category & { is_active: boolean }) => c.is_active),
+        response.data.data.filter((c: Category) => c.is_active),
       )
     }
     fetchCategories()
   }, [])
 
-  const addRow = () => {
-    setCategoryRows([...categoryRows, { category_id: '', count: '' }])
+  const availableCategories = (excludeIndex: number) => {
+    const usedIds = categoryRows
+      .filter((_, i) => i !== excludeIndex)
+      .map((r) => r.category_id)
+      .filter(Boolean)
+    return categories.filter((c) => !usedIds.includes(String(c.id)))
   }
 
-  const removeRow = (index: number) => {
-    setCategoryRows(categoryRows.filter((_, i) => i !== index))
-  }
-
-  const updateRow = (index: number, field: keyof CategoryRow, value: string) => {
-    const updated = [...categoryRows]
-    updated[index] = { ...updated[index], [field]: value }
-    setCategoryRows(updated)
-  }
-
-  const handleGenerate = async () => {
+  const onSubmit = async (data: TestGenerateFormData) => {
     setError('')
-    setSaving(true)
     try {
-      const categoriesPayload = categoryRows
+      const categoriesPayload = data.category_rows
         .filter((r) => r.category_id && r.count)
         .map((r) => ({
           category_id: Number(r.category_id),
@@ -73,15 +82,14 @@ export default function TestCreate() {
 
       if (categoriesPayload.length === 0) {
         setError('Add at least one category with question count')
-        setSaving(false)
         return
       }
 
       const response = await api.post('/tests/generate', {
-        candidate_name: candidateName,
-        candidate_cnic: candidateCnic,
+        candidate_name: data.candidate_name,
+        candidate_cnic: data.candidate_cnic,
         categories: categoriesPayload,
-        duration_minutes: Number(duration),
+        duration_minutes: Number(data.duration),
       })
 
       setGeneratedTestId(response.data.data.test_id)
@@ -92,8 +100,6 @@ export default function TestCreate() {
         const axiosErr = err as { response?: { data?: { message?: string } } }
         setError(axiosErr.response?.data?.message || 'Failed to generate test')
       }
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -101,14 +107,6 @@ export default function TestCreate() {
     navigator.clipboard.writeText(generatedTestId)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  const availableCategories = (excludeIndex: number) => {
-    const usedIds = categoryRows
-      .filter((_, i) => i !== excludeIndex)
-      .map((r) => r.category_id)
-      .filter(Boolean)
-    return categories.filter((c) => !usedIds.includes(String(c.id)))
   }
 
   return (
@@ -127,14 +125,14 @@ export default function TestCreate() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Candidate Name"
-              value={candidateName}
-              onChange={(e) => setCandidateName(e.target.value)}
+              {...register('candidate_name')}
+              error={errors.candidate_name?.message}
               placeholder="e.g. Ahmed Ali"
             />
             <Input
               label="CNIC"
-              value={candidateCnic}
-              onChange={(e) => setCandidateCnic(e.target.value)}
+              {...register('candidate_cnic')}
+              error={errors.candidate_cnic?.message}
               placeholder="e.g. 35202-1234567-1"
             />
           </div>
@@ -143,13 +141,13 @@ export default function TestCreate() {
             Test Configuration
           </h2>
           <div className="space-y-3">
-            {categoryRows.map((row, index) => (
-              <div key={index} className="flex items-end gap-3">
+            {fields.map((field, index) => (
+              <div key={field.id} className="flex items-end gap-3">
                 <div className="flex-1">
                   <Select
                     label={index === 0 ? 'Category' : undefined}
-                    value={row.category_id}
-                    onChange={(e) => updateRow(index, 'category_id', e.target.value)}
+                    {...register(`category_rows.${index}.category_id`)}
+                    error={errors.category_rows?.[index]?.category_id?.message}
                     options={availableCategories(index).map((c) => ({
                       value: c.id,
                       label: c.name,
@@ -162,13 +160,13 @@ export default function TestCreate() {
                     label={index === 0 ? 'Questions' : undefined}
                     type="number"
                     min="1"
-                    value={row.count}
-                    onChange={(e) => updateRow(index, 'count', e.target.value)}
+                    {...register(`category_rows.${index}.count`)}
+                    error={errors.category_rows?.[index]?.count?.message}
                     placeholder="Count"
                   />
                 </div>
-                {categoryRows.length > 1 && (
-                  <Button variant="ghost" size="sm" onClick={() => removeRow(index)}>
+                {fields.length > 1 && (
+                  <Button variant="ghost" size="sm" onClick={() => remove(index)}>
                     Remove
                   </Button>
                 )}
@@ -176,17 +174,21 @@ export default function TestCreate() {
             ))}
           </div>
 
-          <Button variant="ghost" size="sm" className="mt-3" onClick={addRow}>
+          <Button variant="ghost" size="sm" className="mt-3" onClick={() => append({ category_id: '', count: '' })}>
             + Add Category
           </Button>
+
+          {errors.category_rows?.message && (
+            <p className="mt-1 text-sm text-rose-600">{errors.category_rows.message}</p>
+          )}
 
           <div className="mt-6">
             <Input
               label="Duration (minutes)"
               type="number"
               min="1"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
+              {...register('duration')}
+              error={errors.duration?.message}
               placeholder="e.g. 60"
             />
           </div>
@@ -196,9 +198,7 @@ export default function TestCreate() {
               Cancel
             </Button>
             <Button
-              onClick={handleGenerate}
-              loading={saving}
-              disabled={!candidateName || !candidateCnic}
+              onClick={handleSubmit(onSubmit)}
             >
               Generate Test
             </Button>
@@ -218,7 +218,7 @@ export default function TestCreate() {
           <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4 text-center">
             <CheckCircle className="mx-auto h-7 w-7 text-emerald-600 mb-2" />
             <p className="text-sm text-slate-500 dark:text-slate-400">Candidate</p>
-            <p className="font-semibold text-slate-900 dark:text-slate-100">{candidateName}</p>
+            <p className="font-semibold text-slate-900 dark:text-slate-100">{watch('candidate_name')}</p>
           </div>
           <div className="rounded-lg bg-primary-50 p-4 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">Test ID</p>
