@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button'
 import ThemeToggle from '@/components/ThemeToggle'
 import Skeleton from '@/components/ui/Skeleton'
 import Table, { TableRow, TableCell } from '@/components/ui/Table'
+import { getErrorMessage } from '@/lib/errors'
 
 interface CategoryBreakdown {
   category: string
@@ -71,16 +72,11 @@ export default function CandidateInstructions() {
       await candidateApi.post(`/candidate/${testId}/start`)
       navigate(`/candidate/${testId}/test`)
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as { response?: { status?: number; data?: { message?: string } } }
-        if (axiosErr.response?.status === 408) {
-          navigate(`/candidate/${testId}/complete`)
-          return
-        }
-        setError(axiosErr.response?.data?.message || 'Failed to start test')
-      } else {
-        setError('Network error. Please try again.')
+      if (err && typeof err === 'object' && 'status' in err && (err as { status?: number }).status === 408) {
+        navigate(`/candidate/${testId}/complete`)
+        return
       }
+      setError(getErrorMessage(err, 'Failed to start test'))
     } finally {
       setStarting(false)
     }

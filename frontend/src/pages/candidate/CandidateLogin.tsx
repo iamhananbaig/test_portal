@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import ThemeToggle from '@/components/ThemeToggle'
 import { candidateLoginSchema } from '@/lib/validations'
+import { getErrorMessage } from '@/lib/errors'
 
 export default function CandidateLogin() {
   const [loading, setLoading] = useState(false)
@@ -35,12 +36,7 @@ export default function CandidateLogin() {
         setError(response.message || 'Test cannot be accessed')
       }
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as { response?: { data?: { message?: string } } }
-        setError(axiosErr.response?.data?.message || 'Test not found')
-      } else {
-        setError('Network error. Please try again.')
-      }
+      setError(getErrorMessage(err, 'Network error. Please try again.'))
     } finally {
       setLoading(false)
     }

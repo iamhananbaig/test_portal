@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useForm, useFieldArray, useWatch } from 'react-hook-form'
+import { useForm, useWatch, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { ClipboardCopy, CheckCircle } from 'lucide-react'
@@ -13,6 +13,7 @@ import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import { formatTime } from '@/utils/dates'
 import { testGenerateSchema } from '@/lib/validations'
+import { getErrorMessage } from '@/lib/errors'
 
 interface Category {
   id: number
@@ -74,8 +75,8 @@ export default function TestCreate() {
       setSuccessModal(true)
       setError('')
     },
-    onError: (err: { response?: { data?: { message?: string } } }) => {
-      setError(err.response?.data?.message || 'Failed to generate test')
+    onError: (err: unknown) => {
+      setError(getErrorMessage(err, 'Failed to generate test'))
     },
   })
 

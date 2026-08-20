@@ -12,6 +12,7 @@ import Card, { CardContent } from '@/components/ui/Card'
 import Skeleton from '@/components/ui/Skeleton'
 import PageHeader from '@/components/ui/PageHeader'
 import { questionSchema } from '@/lib/validations'
+import { getErrorMessage } from '@/lib/errors'
 
 interface Category {
   id: number
@@ -250,17 +251,7 @@ export default function QuestionForm() {
       }
       navigate('/admin/questions')
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as {
-          response?: { data?: { message?: string; errors?: Record<string, string[]> } }
-        }
-        const errors = axiosErr.response?.data?.errors
-        if (errors) {
-          setError(Object.values(errors).flat().join(', '))
-        } else {
-          setError(axiosErr.response?.data?.message || 'An error occurred')
-        }
-      }
+      setError(getErrorMessage(err))
     } finally {
       setSaving(false)
     }

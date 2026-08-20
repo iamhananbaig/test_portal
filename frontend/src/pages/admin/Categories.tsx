@@ -11,10 +11,10 @@ import Table, { TableRow, TableCell } from '@/components/ui/Table'
 import Modal from '@/components/ui/Modal'
 import Skeleton from '@/components/ui/Skeleton'
 import EmptyState from '@/components/ui/EmptyState'
-import Toast from '@/components/ui/Toast'
 import PageHeader from '@/components/ui/PageHeader'
 import Badge from '@/components/ui/Badge'
 import { categorySchema } from '@/lib/validations'
+import { useToast } from '@/context/useToast'
 
 interface Category {
   id: number
@@ -26,7 +26,7 @@ interface Category {
 export default function Categories() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const { success, error: toastError } = useToast()
   const queryClient = useQueryClient()
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
@@ -45,11 +45,11 @@ export default function Categories() {
     mutationFn: (data: { name: string }) => api.post('/categories', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
-      setToast({ message: 'Category created.', type: 'success' })
+      success('Category created.')
       setModalOpen(false)
     },
     onError: () => {
-      setToast({ message: 'Failed to save category.', type: 'error' })
+      toastError('Failed to save category.')
     },
   })
 
@@ -57,11 +57,11 @@ export default function Categories() {
     mutationFn: ({ id, name }: { id: number; name: string }) => api.put(`/categories/${id}`, { name }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
-      setToast({ message: 'Category updated.', type: 'success' })
+      success('Category updated.')
       setModalOpen(false)
     },
     onError: () => {
-      setToast({ message: 'Failed to save category.', type: 'error' })
+      toastError('Failed to save category.')
     },
   })
 
@@ -70,10 +70,7 @@ export default function Categories() {
       api.put(`/categories/${id}`, { is_active }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
-      setToast({
-        message: `Category ${vars.is_active ? 'deactivated' : 'activated'}.`,
-        type: 'success',
-      })
+      success(`Category ${vars.is_active ? 'deactivated' : 'activated'}.`)
     },
   })
 
@@ -101,8 +98,6 @@ export default function Categories() {
 
   return (
     <div>
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-
       <PageHeader
         title="Categories"
         action={<Button onClick={openCreate}>Add Category</Button>}

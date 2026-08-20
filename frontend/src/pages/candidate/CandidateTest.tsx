@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import { Flag, AlertTriangle, Sun, Moon, Menu, X, ImageIcon } from 'lucide-react'
 import { candidateApi } from '@/services/api'
 import { useTheme } from '@/context/useTheme'
+import { getErrorMessage } from '@/lib/errors'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
 import Skeleton from '@/components/ui/Skeleton'
@@ -89,16 +90,11 @@ export default function CandidateTest() {
         }
       } catch (err: unknown) {
         if (err && typeof err === 'object' && 'name' in err && err.name === 'AbortError') return
-        if (err && typeof err === 'object' && 'response' in err) {
-          const axiosErr = err as { response?: { status?: number; data?: { message?: string } } }
-          if (axiosErr.response?.status === 408) {
-            navigate(`/candidate/${testId}/complete`)
-            return
-          }
-          if (!cancelled) setError(axiosErr.response?.data?.message || 'Failed to load questions')
-        } else {
-          if (!cancelled) setError('Network error loading questions')
+        if (err && typeof err === 'object' && 'status' in err && (err as { status?: number }).status === 408) {
+          navigate(`/candidate/${testId}/complete`)
+          return
         }
+        if (!cancelled) setError(getErrorMessage(err, 'Failed to load questions'))
       }
       if (!cancelled) setLoading(false)
     }
@@ -283,12 +279,7 @@ export default function CandidateTest() {
       localStorage.removeItem(`test_${testId}_index`)
       navigate(`/candidate/${testId}/complete`)
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as { response?: { data?: { message?: string } } }
-        setError(axiosErr.response?.data?.message || 'Failed to submit')
-      } else {
-        setError('Network error')
-      }
+      setError(getErrorMessage(err, 'Failed to submit'))
     } finally {
       setSubmitting(false)
       setShowSubmitConfirm(false)

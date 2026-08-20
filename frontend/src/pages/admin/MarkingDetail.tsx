@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useForm, useWatch } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -8,8 +8,8 @@ import Button from '@/components/ui/Button'
 import Card, { CardContent, CardHeader } from '@/components/ui/Card'
 import Input from '@/components/ui/Input'
 import Skeleton from '@/components/ui/Skeleton'
-import Toast from '@/components/ui/Toast'
 import PageHeader from '@/components/ui/PageHeader'
+import { useToast } from '@/context/useToast'
 
 interface TestInfo {
   id: number
@@ -38,7 +38,7 @@ interface MarkingFormData {
 export default function MarkingDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const { success, error: toastError } = useToast()
   const queryClient = useQueryClient()
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<MarkingFormData>({
@@ -74,13 +74,10 @@ export default function MarkingDetail() {
       api.put(`/marking/${id}`, { marks: marksPayload }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marking', id] })
-      setToast({ message: 'Marks saved successfully.', type: 'success' })
+      success('Marks saved successfully.')
     },
     onError: (err: { response?: { data?: { message?: string } } }) => {
-      setToast({
-        message: err.response?.data?.message || 'Failed to save marks.',
-        type: 'error',
-      })
+      toastError(err.response?.data?.message || 'Failed to save marks.')
     },
   })
 
@@ -88,13 +85,10 @@ export default function MarkingDetail() {
     mutationFn: () => api.post(`/marking/${id}/finalize`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marking', id] })
-      setToast({ message: 'Test finalized successfully.', type: 'success' })
+      success('Test finalized successfully.')
     },
     onError: (err: { response?: { data?: { message?: string } } }) => {
-      setToast({
-        message: err.response?.data?.message || 'Failed to finalize.',
-        type: 'error',
-      })
+      toastError(err.response?.data?.message || 'Failed to finalize.')
     },
   })
 
@@ -110,7 +104,7 @@ export default function MarkingDetail() {
       })
 
     if (marksPayload.length === 0) {
-      setToast({ message: 'Please enter marks for at least one question.', type: 'error' })
+      toastError('Please enter marks for at least one question.')
       return
     }
 
@@ -156,8 +150,6 @@ export default function MarkingDetail() {
 
   return (
     <div>
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-
       <PageHeader
         title={`Marking: ${testInfo.test_id}`}
         description={`${testInfo.candidate_name} — ${testInfo.candidate_cnic}`}

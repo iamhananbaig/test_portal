@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { useAuth } from '@/context/useAuth'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import { getErrorMessage } from '@/lib/errors'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -20,12 +21,7 @@ export default function Login() {
       await login(email, password)
       navigate('/admin')
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as { response?: { data?: { message?: string } } }
-        setError(axiosErr.response?.data?.message || 'Invalid credentials')
-      } else {
-        setError('An error occurred')
-      }
+      setError(getErrorMessage(err, 'Invalid credentials'))
     } finally {
       setLoading(false)
     }
