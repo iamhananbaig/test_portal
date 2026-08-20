@@ -41,12 +41,12 @@ Route::middleware('auth:api')->group(function () {
 
 Route::prefix('candidate')->group(function () {
     Route::post('/validate', [CandidateController::class, 'validateTest']);
-    Route::get('/{test}/instructions', [CandidateController::class, 'instructions']);
-    Route::post('/{test}/start', [CandidateController::class, 'start']);
-    Route::get('/{test}/questions', [CandidateController::class, 'questions']);
-    Route::put('/{test}/answer', [CandidateController::class, 'answer']);
-    Route::put('/{test}/flag', [CandidateController::class, 'flag']);
-    Route::post('/{test}/submit', [CandidateController::class, 'submit']);
-    Route::get('/{test}/status', [CandidateController::class, 'status']);
-    Route::get('/{test}/time', [CandidateController::class, 'timeRemaining']);
+    Route::get('/{test:test_id}/instructions', [CandidateController::class, 'instructions']);
+    Route::post('/{test:test_id}/start', [CandidateController::class, 'start']);
+    Route::get('/{test:test_id}/questions', [CandidateController::class, 'questions']);
+    Route::put('/{test:test_id}/answer', [CandidateController::class, 'answer']);
+    Route::put('/{test:test_id}/flag', [CandidateController::class, 'flag']);
+    Route::post('/{test:test_id}/submit', [CandidateController::class, 'submit']);
+    Route::get('/{test:test_id}/status', [CandidateController::class, 'status']);
+    Route::get('/{test:test_id}/time', [CandidateController::class, 'timeRemaining']);
 });

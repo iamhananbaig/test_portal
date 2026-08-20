@@ -79,7 +79,7 @@ it('returns 409 for completed test', function () {
 });
 
 it('returns test instructions', function () {
-    $response = $this->getJson('/api/candidate/'.$this->test->id.'/instructions');
+    $response = $this->getJson('/api/candidate/'.$this->test->test_id.'/instructions');
 
     $response->assertOk()
         ->assertJsonFragment([
@@ -93,7 +93,7 @@ it('returns test instructions', function () {
 });
 
 it('starts a ready test', function () {
-    $response = $this->postJson('/api/candidate/'.$this->test->id.'/start');
+    $response = $this->postJson('/api/candidate/'.$this->test->test_id.'/start');
 
     $response->assertOk()
         ->assertJsonFragment([
@@ -110,7 +110,7 @@ it('starts a ready test', function () {
 it('allows resuming an in_progress test', function () {
     $this->test->update(['status' => 'in_progress', 'started_at' => now(), 'expires_at' => now()->addHour()]);
 
-    $response = $this->postJson('/api/candidate/'.$this->test->id.'/start');
+    $response = $this->postJson('/api/candidate/'.$this->test->test_id.'/start');
 
     $response->assertOk()
         ->assertJsonFragment(['status' => 'in_progress']);
@@ -119,7 +119,7 @@ it('allows resuming an in_progress test', function () {
 it('rejects starting a submitted test', function () {
     $this->test->update(['status' => 'submitted']);
 
-    $response = $this->postJson('/api/candidate/'.$this->test->id.'/start');
+    $response = $this->postJson('/api/candidate/'.$this->test->test_id.'/start');
 
     $response->assertStatus(422)
         ->assertJsonFragment(['message' => 'Test cannot be started.']);
@@ -128,7 +128,7 @@ it('rejects starting a submitted test', function () {
 it('returns questions for in_progress test', function () {
     $this->test->update(['status' => 'in_progress', 'started_at' => now(), 'expires_at' => now()->addHour()]);
 
-    $response = $this->getJson('/api/candidate/'.$this->test->id.'/questions');
+    $response = $this->getJson('/api/candidate/'.$this->test->test_id.'/questions');
 
     $response->assertOk()
         ->assertJsonStructure([
@@ -144,7 +144,7 @@ it('returns questions for in_progress test', function () {
 });
 
 it('rejects questions for non in_progress test', function () {
-    $response = $this->getJson('/api/candidate/'.$this->test->id.'/questions');
+    $response = $this->getJson('/api/candidate/'.$this->test->test_id.'/questions');
 
     $response->assertStatus(422);
 });
@@ -154,7 +154,7 @@ it('saves an MCQ answer', function () {
     $question = $this->questions[0];
     $option = $question->options->first();
 
-    $response = $this->putJson('/api/candidate/'.$this->test->id.'/answer', [
+    $response = $this->putJson('/api/candidate/'.$this->test->test_id.'/answer', [
         'question_id' => $question->id,
         'selected_option_id' => $option->id,
     ]);
@@ -185,7 +185,7 @@ it('saves a descriptive answer', function () {
         'display_order' => 4,
     ]);
 
-    $response = $this->putJson('/api/candidate/'.$this->test->id.'/answer', [
+    $response = $this->putJson('/api/candidate/'.$this->test->test_id.'/answer', [
         'question_id' => $descriptiveQuestion->id,
         'descriptive_answer' => 'This is my answer text.',
     ]);
@@ -203,7 +203,7 @@ it('toggles flag on a question', function () {
     $this->test->update(['status' => 'in_progress', 'started_at' => now(), 'expires_at' => now()->addHour()]);
     $question = $this->questions[0];
 
-    $response = $this->putJson('/api/candidate/'.$this->test->id.'/flag', [
+    $response = $this->putJson('/api/candidate/'.$this->test->test_id.'/flag', [
         'question_id' => $question->id,
     ]);
 
@@ -217,7 +217,7 @@ it('toggles flag on a question', function () {
     expect($answer->is_flagged)->toBeTrue();
 
     // Toggle off
-    $response = $this->putJson('/api/candidate/'.$this->test->id.'/flag', [
+    $response = $this->putJson('/api/candidate/'.$this->test->test_id.'/flag', [
         'question_id' => $question->id,
     ]);
 
@@ -239,7 +239,7 @@ it('submits a test manually', function () {
         'selected_option_id' => $correctOption->id,
     ]);
 
-    $response = $this->postJson('/api/candidate/'.$this->test->id.'/submit');
+    $response = $this->postJson('/api/candidate/'.$this->test->test_id.'/submit');
 
     $response->assertOk()
         ->assertJsonFragment(['submitted' => true]);
@@ -256,13 +256,13 @@ it('submits a test manually', function () {
 });
 
 it('rejects submit for non in_progress test', function () {
-    $response = $this->postJson('/api/candidate/'.$this->test->id.'/submit');
+    $response = $this->postJson('/api/candidate/'.$this->test->test_id.'/submit');
 
     $response->assertStatus(422);
 });
 
 it('returns test status', function () {
-    $response = $this->getJson('/api/candidate/'.$this->test->id.'/status');
+    $response = $this->getJson('/api/candidate/'.$this->test->test_id.'/status');
 
     $response->assertOk()
         ->assertJsonFragment(['status' => 'ready']);
@@ -271,7 +271,7 @@ it('returns test status', function () {
 it('returns remaining time', function () {
     $this->test->update(['status' => 'in_progress', 'started_at' => now(), 'expires_at' => now()->addHour()]);
 
-    $response = $this->getJson('/api/candidate/'.$this->test->id.'/time');
+    $response = $this->getJson('/api/candidate/'.$this->test->test_id.'/time');
 
     $response->assertOk()
         ->assertJsonStructure(['remaining_seconds', 'status']);
@@ -310,7 +310,7 @@ it('auto-submits when time expires', function () {
         'selected_option_id' => $option->id,
     ]);
 
-    $response = $this->putJson('/api/candidate/'.$this->test->id.'/answer', [
+    $response = $this->putJson('/api/candidate/'.$this->test->test_id.'/answer', [
         'question_id' => $this->questions[1]->id,
         'selected_option_id' => $this->questions[1]->options->first()->id,
     ]);
