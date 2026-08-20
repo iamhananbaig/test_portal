@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Flag, AlertTriangle, Sun, Moon } from 'lucide-react'
+import { Flag, AlertTriangle, Sun, Moon, Menu, X } from 'lucide-react'
 import { candidateApi } from '../../services/api'
 import { useTheme } from '../../context/ThemeContext'
 import Button from '../../components/ui/Button'
@@ -49,6 +49,7 @@ export default function CandidateTest() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -282,6 +283,7 @@ export default function CandidateTest() {
   const goToQuestion = (index: number) => {
     setCurrentIndex(index)
     localStorage.setItem(`test_${testId}_index`, index.toString())
+    setSidebarOpen(false)
   }
 
   const currentQuestion = data?.questions[currentIndex]
@@ -355,6 +357,13 @@ export default function CandidateTest() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-2.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="md:hidden rounded-lg p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            aria-label="Toggle sidebar"
+          >
+            {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
           <span className="font-medium text-slate-900 dark:text-slate-100 text-sm">{data.candidate_name}</span>
           <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">{data.test_id}</span>
         </div>
@@ -397,7 +406,13 @@ export default function CandidateTest() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto flex-shrink-0 p-4 hidden md:block">
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        <aside className={`w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto flex-shrink-0 p-4 fixed inset-y-0 left-0 z-40 transition-transform duration-250 ease-out md:static md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="mb-4">
             <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
               Questions ({answeredCount}/{data.questions.length} answered, {flaggedCount} flagged)
@@ -559,21 +574,6 @@ export default function CandidateTest() {
               >
                 Previous
               </Button>
-
-              <div className="md:hidden">
-                <select
-                  value={currentIndex}
-                  onChange={(e) => goToQuestion(parseInt(e.target.value, 10))}
-                  className="border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-                >
-                  {data.questions.map((q, i) => (
-                    <option key={q.id} value={i}>
-                      Q{i + 1} {q.is_flagged ? '(flagged)' : ''}{' '}
-                      {q.selected_option_id || q.descriptive_answer ? '(answered)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               <Button
                 onClick={() => {
