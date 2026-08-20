@@ -159,6 +159,16 @@ class CandidateController extends Controller
             return response()->json(['message' => 'Question does not belong to this test.'], 422);
         }
 
+        if (! empty($validated['selected_option_id'])) {
+            $optionBelongsToQuestion = QuestionOption::where('id', $validated['selected_option_id'])
+                ->where('question_id', $validated['question_id'])
+                ->exists();
+
+            if (! $optionBelongsToQuestion) {
+                return response()->json(['message' => 'Option does not belong to this question.'], 422);
+            }
+        }
+
         CandidateAnswer::updateOrCreate(
             ['test_id' => $test->id, 'question_id' => $validated['question_id']],
             [
@@ -186,8 +196,8 @@ class CandidateController extends Controller
             ->first();
 
         if ($answer) {
-            $answer->update(['is_flagged' => ! $answer->is_flagged]);
-            $flagged = $answer->is_flagged;
+            $flagged = ! $answer->is_flagged;
+            $answer->update(['is_flagged' => $flagged]);
         } else {
             $answer = CandidateAnswer::create([
                 'test_id' => $test->id,
@@ -265,7 +275,24 @@ class CandidateController extends Controller
                 'submission_method' => $method,
             ]);
 
-            $mcqMarks = $this->calculateMcqMarks($test);
+            $answers = CandidateAnswer::where('test_id', $test->id)
+                ->whereNotNull('selected_option_id')
+                ->with('question')
+                ->get();
+
+            $correctOptionIds = QuestionOption::where('is_correct', true)
+                ->whereIn('question_id', $answers->pluck('question_id')->unique())
+                ->pluck('id', 'question_id');
+
+            $mcqMarks = 0;
+            foreach ($answers as $answer) {
+                $isCorrect = $correctOptionIds->get($answer->question_id) === $answer->selected_option_id;
+                $marks = $isCorrect ? ($answer->question->marks ?? 1) : 0;
+                $answer->update(['awarded_marks' => $marks]);
+                $mcqMarks += $marks;
+            }
+
+            $mcqMarks = round($mcqMarks, 2);
 
             $hasDescriptive = TestQuestion::where('test_id', $test->id)
                 ->whereHas('question', fn ($q) => $q->where('type', 'descriptive'))
@@ -283,25 +310,5 @@ class CandidateController extends Controller
 
             $test->update(['status' => $status]);
         });
-    }
-
-    private function calculateMcqMarks(Test $test): float
-    {
-        $answers = CandidateAnswer::where('test_id', $test->id)
-            ->whereNotNull('selected_option_id')
-            ->get();
-
-        $marks = 0;
-        foreach ($answers as $answer) {
-            $correctOption = QuestionOption::where('question_id', $answer->question_id)
-                ->where('is_correct', true)
-                ->first();
-
-            if ($correctOption && $correctOption->id === $answer->selected_option_id) {
-                $marks += $answer->question->marks ?? 1;
-            }
-        }
-
-        return $marks;
     }
 }

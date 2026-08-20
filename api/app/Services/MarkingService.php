@@ -39,30 +39,32 @@ class MarkingService
 
     public function saveMarks(Test $test, array $marks): void
     {
-        foreach ($marks as $item) {
-            $questionId = $item['question_id'];
-            $awardedMarks = (float) $item['awarded_marks'];
+        DB::transaction(function () use ($test, $marks) {
+            foreach ($marks as $item) {
+                $questionId = $item['question_id'];
+                $awardedMarks = (float) $item['awarded_marks'];
 
-            $testQuestion = TestQuestion::where('test_id', $test->id)
-                ->where('question_id', $questionId)
-                ->whereHas('question', fn ($q) => $q->where('type', 'descriptive'))
-                ->firstOrFail();
+                $testQuestion = TestQuestion::where('test_id', $test->id)
+                    ->where('question_id', $questionId)
+                    ->whereHas('question', fn ($q) => $q->where('type', 'descriptive'))
+                    ->firstOrFail();
 
-            $maxMarks = (float) $testQuestion->question->marks;
-            if ($awardedMarks < 0 || $awardedMarks > $maxMarks) {
-                throw new \InvalidArgumentException(
-                    "Awarded marks must be between 0 and {$maxMarks} for question {$questionId}."
+                $maxMarks = (float) $testQuestion->question->marks;
+                if ($awardedMarks < 0 || $awardedMarks > $maxMarks) {
+                    throw new \InvalidArgumentException(
+                        "Awarded marks must be between 0 and {$maxMarks} for question {$questionId}."
+                    );
+                }
+
+                CandidateAnswer::updateOrCreate(
+                    ['test_id' => $test->id, 'question_id' => $questionId],
+                    ['awarded_marks' => $awardedMarks]
                 );
             }
 
-            CandidateAnswer::updateOrCreate(
-                ['test_id' => $test->id, 'question_id' => $questionId],
-                ['awarded_marks' => $awardedMarks]
-            );
-        }
-
-        $descriptiveMarks = $this->calculateDescriptiveMarks($test);
-        $test->result->update(['descriptive_marks' => $descriptiveMarks]);
+            $descriptiveMarks = $this->calculateDescriptiveMarks($test);
+            $test->result->update(['descriptive_marks' => $descriptiveMarks]);
+        });
     }
 
     public function finalize(Test $test): Result

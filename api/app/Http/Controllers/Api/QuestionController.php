@@ -33,7 +33,8 @@ class QuestionController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('text', 'like', '%'.$request->input('search').'%');
+            $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->input('search'));
+            $query->where('text', 'like', '%'.$search.'%');
         }
 
         $questions = $query->latest()->paginate($request->input('per_page', 15));

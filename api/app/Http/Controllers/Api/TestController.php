@@ -55,7 +55,7 @@ class TestController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->input('search');
+            $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->input('search'));
             $query->where(function ($q) use ($search) {
                 $q->where('candidate_name', 'like', "%{$search}%")
                     ->orWhere('candidate_cnic', 'like', "%{$search}%")
