@@ -190,7 +190,8 @@ export default function CandidateTest() {
           ),
         }
       })
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
       setSaveStatus('unsaved')
     }
   }, [testId, navigate])
