@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Flag, AlertTriangle } from 'lucide-react'
+import { candidateApi } from '../../services/api'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import Spinner from '../../components/ui/Spinner'
@@ -64,37 +65,34 @@ export default function CandidateTest() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/candidate/${testId}/questions`, {
-          headers: { Accept: 'application/json' },
+        const res = await candidateApi.get(`/candidate/${testId}/questions`, {
           signal: controller.signal,
         })
 
-        if (!res.ok) {
-          const body = await res.json()
-          if (res.status === 408) {
-            navigate(`/candidate/${testId}/complete`)
-            return
-          }
-          if (!cancelled) setError(body.message || 'Failed to load questions')
-          return
-        }
-
-        const body: TestData = await res.json()
         if (!cancelled) {
-          setData(body)
-          setRemainingSeconds(body.remaining_seconds)
+          setData(res.data)
+          setRemainingSeconds(res.data.remaining_seconds)
 
           const savedIndex = localStorage.getItem(`test_${testId}_index`)
           if (savedIndex !== null) {
             const idx = parseInt(savedIndex, 10)
-            if (idx >= 0 && idx < body.questions.length) {
+            if (idx >= 0 && idx < res.data.questions.length) {
               setCurrentIndex(idx)
             }
           }
         }
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') return
-        if (!cancelled) setError('Network error loading questions')
+      } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'name' in err && err.name === 'AbortError') return
+        if (err && typeof err === 'object' && 'response' in err) {
+          const axiosErr = err as { response?: { status?: number; data?: { message?: string } } }
+          if (axiosErr.response?.status === 408) {
+            navigate(`/candidate/${testId}/complete`)
+            return
+          }
+          if (!cancelled) setError(axiosErr.response?.data?.message || 'Failed to load questions')
+        } else {
+          if (!cancelled) setError('Network error loading questions')
+        }
       }
       if (!cancelled) setLoading(false)
     }
@@ -130,10 +128,7 @@ export default function CandidateTest() {
 
     const submitOnExpiry = async () => {
       try {
-        await fetch(`/api/candidate/${testId}/submit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        })
+        await candidateApi.post(`/candidate/${testId}/submit`)
       } catch {
         /* server may have already auto-submitted */
       }
@@ -171,27 +166,12 @@ export default function CandidateTest() {
   const saveAnswer = useCallback(
     async (questionId: number, selectedOptionId: number | null, descriptiveAnswer: string | null) => {
       setSaveStatus('saving')
-      const controller = new AbortController()
       try {
-        const res = await fetch(`/api/candidate/${testId}/answer`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({
-            question_id: questionId,
-            selected_option_id: selectedOptionId,
-            descriptive_answer: descriptiveAnswer,
-          }),
-          signal: controller.signal,
+        await candidateApi.put(`/candidate/${testId}/answer`, {
+          question_id: questionId,
+          selected_option_id: selectedOptionId,
+          descriptive_answer: descriptiveAnswer,
         })
-
-        if (!res.ok) {
-          if (res.status === 408) {
-            navigate(`/candidate/${testId}/complete`)
-            return
-          }
-          setSaveStatus('unsaved')
-          return
-        }
 
         setSaveStatus('saved')
         setData((prev) => {
@@ -205,8 +185,15 @@ export default function CandidateTest() {
             ),
           }
         })
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') return
+      } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'response' in err) {
+          const axiosErr = err as { response?: { status?: number } }
+          if (axiosErr.response?.status === 408) {
+            navigate(`/candidate/${testId}/complete`)
+            return
+          }
+        }
+        if (err && typeof err === 'object' && 'name' in err && err.name === 'AbortError') return
         setSaveStatus('unsaved')
       }
     },
@@ -244,24 +231,18 @@ export default function CandidateTest() {
 
   const handleFlag = async (questionId: number) => {
     try {
-      const res = await fetch(`/api/candidate/${testId}/flag`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ question_id: questionId }),
+      const { data: body } = await candidateApi.put(`/candidate/${testId}/flag`, {
+        question_id: questionId,
       })
-
-      if (res.ok) {
-        const body = await res.json()
-        setData((prev) => {
-          if (!prev) return prev
-          return {
-            ...prev,
-            questions: prev.questions.map((q) =>
-              q.id === questionId ? { ...q, is_flagged: body.is_flagged } : q,
-            ),
-          }
-        })
-      }
+      setData((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          questions: prev.questions.map((q) =>
+            q.id === questionId ? { ...q, is_flagged: body.is_flagged } : q,
+          ),
+        }
+      })
     } catch {
       // silent
     }
@@ -280,20 +261,16 @@ export default function CandidateTest() {
         await saveAnswer(questionId, selectedOptionId, descriptiveAnswer)
       }
 
-      const res = await fetch(`/api/candidate/${testId}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      })
-
-      if (res.ok) {
-        localStorage.removeItem(`test_${testId}_index`)
-        navigate(`/candidate/${testId}/complete`)
+      await candidateApi.post(`/candidate/${testId}/submit`)
+      localStorage.removeItem(`test_${testId}_index`)
+      navigate(`/candidate/${testId}/complete`)
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } }
+        setError(axiosErr.response?.data?.message || 'Failed to submit')
       } else {
-        const body = await res.json()
-        setError(body.message || 'Failed to submit')
+        setError('Network error')
       }
-    } catch {
-      setError('Network error')
     } finally {
       setSubmitting(false)
       setShowSubmitConfirm(false)

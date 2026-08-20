@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { LogIn } from 'lucide-react'
+import { candidateApi } from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 
@@ -16,18 +17,9 @@ export default function CandidateLogin() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/candidate/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ test_id: testId.trim().toUpperCase() }),
+      const { data } = await candidateApi.post('/candidate/validate', {
+        test_id: testId.trim().toUpperCase(),
       })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.message || 'Test not found')
-        return
-      }
 
       if (data.status === 'in_progress') {
         navigate(`/candidate/${testId.trim().toUpperCase()}/test`)
@@ -36,8 +28,13 @@ export default function CandidateLogin() {
       } else {
         setError(data.message || 'Test cannot be accessed')
       }
-    } catch {
-      setError('Network error. Please try again.')
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } }
+        setError(axiosErr.response?.data?.message || 'Test not found')
+      } else {
+        setError('Network error. Please try again.')
+      }
     } finally {
       setLoading(false)
     }

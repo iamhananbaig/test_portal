@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Clock, BookOpen, AlertTriangle, ArrowLeft, Play } from 'lucide-react'
+import { candidateApi } from '../../services/api'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import Table, { TableRow, TableCell } from '../../components/ui/Table'
@@ -39,47 +40,46 @@ export default function CandidateInstructions() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch(`/api/candidate/${testId}/instructions`, {
-      headers: { Accept: 'application/json' },
-    })
+    let cancelled = false
+
+    candidateApi
+      .get(`/candidate/${testId}/instructions`)
       .then((res) => {
-        if (res.status === 408) {
+        if (!cancelled) setData(res.data)
+      })
+      .catch((err) => {
+        if (err.response?.status === 408) {
           navigate(`/candidate/${testId}/complete`)
-          return null
+          return
         }
-        if (!res.ok) throw new Error('Failed to load instructions')
-        return res.json()
+        if (!cancelled) setError('Failed to load test instructions')
       })
-      .then((data) => {
-        if (data) setData(data)
+      .finally(() => {
+        if (!cancelled) setLoading(false)
       })
-      .catch(() => setError('Failed to load test instructions'))
-      .finally(() => setLoading(false))
+
+    return () => {
+      cancelled = true
+    }
   }, [testId, navigate])
 
   const handleStart = async () => {
     setStarting(true)
     setError('')
     try {
-      const res = await fetch(`/api/candidate/${testId}/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      })
-
-      if (res.status === 408) {
-        navigate(`/candidate/${testId}/complete`)
-        return
-      }
-
-      if (!res.ok) {
-        const body = await res.json()
-        setError(body.message || 'Failed to start test')
-        return
-      }
-
+      await candidateApi.post(`/candidate/${testId}/start`)
       navigate(`/candidate/${testId}/test`)
-    } catch {
-      setError('Network error. Please try again.')
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { status?: number; data?: { message?: string } } }
+        if (axiosErr.response?.status === 408) {
+          navigate(`/candidate/${testId}/complete`)
+          return
+        }
+        setError(axiosErr.response?.data?.message || 'Failed to start test')
+      } else {
+        setError('Network error. Please try again.')
+      }
     } finally {
       setStarting(false)
     }
