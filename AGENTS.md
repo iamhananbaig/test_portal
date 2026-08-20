@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Candidate Online Testing Portal — a hiring assessment platform with admin management and a candidate test-taking SPA. Currently in **early scaffolding** (fresh Laravel + React boilerplate). Full specs in `project.md` (product requirements) and `plan.md` (technical implementation plan).
+Candidate Online Testing Portal — a hiring assessment platform with admin management and a candidate test-taking SPA. Full specs in `project.md` (product requirements) and `plan.md` (technical implementation plan).
 
 **Note:** `plan.md` references `backend/` but the actual directory is `api/`.
 
@@ -12,11 +12,12 @@ Candidate Online Testing Portal — a hiring assessment platform with admin mana
 |---|---|---|
 | `api/` | Laravel backend + Blade admin assets | Laravel 13, PHP 8.4, MySQL, JWT auth, Tailwind v4 |
 | `frontend/` | React SPA (candidate portal + admin UI) | React 19, TypeScript 6, Vite 8, oxlint |
-| `.agents/skills/` | AI agent skills (inferred from project) | Laravel best practices, Pest testing, Tailwind, conventions |
 
 Two separate `package.json` files:
 - `api/package.json` — Vite build for Blade-served admin assets (Tailwind CSS)
 - `frontend/package.json` — Standalone React SPA (oxlint, TypeScript)
+
+Backend-specific conventions live in `api/AGENTS.md`. Refer to it when writing PHP/Laravel code.
 
 ## Commands
 
@@ -45,7 +46,7 @@ cd api && php artisan test --compact --filter=testName        # single test
 cd api && composer test                                        # clear config + run tests
 ```
 
-Tests use **SQLite in-memory** (configured in `api/phpunit.xml`), not MySQL.
+Tests use **SQLite in-memory** (configured in `api/phpunit.xml`), not MySQL. All Feature tests use `RefreshDatabase` via Pest config.
 
 ### Lint & Format
 
@@ -66,13 +67,26 @@ cd api && npm run build         # vite build (Blade assets)
 
 ## Key Conventions
 
-- **PHP 8 attributes** on models: `#[Fillable]`, `#[Hidden]` — not traditional `$fillable` arrays
-- **Pest PHP** for testing, not PHPUnit directly
+- **PHP 8 attributes** on models: `#[Fillable([...])]`, `#[Hidden([...])]` — not traditional `$fillable` arrays
+- **Pest PHP** for testing, not PHPUnit directly. Tests use `beforeEach` for auth setup with `auth('api')->login()`.
 - **Pint** for PHP formatting — always run `vendor/bin/pint --dirty --format agent` before finalizing PHP changes
-- **oxlint** for frontend linting (not ESLint)
+- **oxlint** for frontend linting (not ESLint). Config at `frontend/.oxlintrc.json`.
 - **JWT auth** via `tymon/jwt-auth` — not Sanctum for API auth
 - Pass `--no-interaction` to all `php artisan make:` commands
 - Create factories + seeders alongside models
+- **Form Requests** for validation (e.g. `StoreCategoryRequest`, `StoreQuestionRequest`)
+- **API Resources** for JSON responses (e.g. `CategoryResource`, `QuestionResource`)
+
+## Frontend Conventions
+
+- **Tailwind v4** with custom theme tokens in `frontend/src/index.css` — uses `@theme` directive, not `tailwind.config.js`
+- Custom color palette: `primary-*` (indigo), `slate-*` (neutrals), semantic `emerald-*`, `amber-*`, `rose-*`
+- Reusable UI components in `frontend/src/components/ui/` (Button, Input, Card, Table, Modal, etc.)
+- **lucide-react** for icons (not heroicons or fontawesome)
+- **axios** for API calls with JWT interceptor in `frontend/src/services/api.ts`
+- **react-router v8** for routing. Admin routes under `/admin`, candidate routes under `/candidate`.
+- Auth context at `frontend/src/context/AuthContext.tsx` — stores token + user in localStorage
+- Pages export default functions, no barrel exports
 
 ## Database
 
@@ -82,7 +96,7 @@ cd api && npm run build         # vite build (Blade assets)
 
 ## Skills
 
-Domain-specific skills in `.agents/skills/` and `api/.agents/skills/`:
+Domain-specific skills in `api/.agents/skills/`:
 - `laravel-best-practices` — Laravel architecture, queries, auth, validation
 - `pest-testing` — Pest PHP test creation and patterns
 - `tailwindcss-development` — Tailwind CSS v4
@@ -90,6 +104,15 @@ Domain-specific skills in `.agents/skills/` and `api/.agents/skills/`:
 
 Activate the relevant skill when working in that domain.
 
-## API Routes (Planned, from `plan.md`)
+## Laravel Boost MCP
 
-27 endpoints across 6 groups: Auth, Categories, Questions, Tests, Marking, Results, plus public Candidate Portal routes. All defined in `plan.md:179-242`.
+The `laravel-boost` MCP server is configured for this project (runs `php artisan boost:mcp` from `api/`). Available tools:
+- `database-query` — read-only DB queries
+- `database-schema` — inspect table structure
+- `search-docs` — search Laravel ecosystem docs (pass `packages` array to scope)
+- `browser-logs` — read browser console logs
+- `get-absolute-url` — resolve URLs
+
+## API Routes (from `plan.md`)
+
+27 endpoints across 6 groups: Auth, Categories, Questions, Tests, Marking, Results, plus public Candidate Portal routes. All defined in `plan.md:179-242` and implemented in `api/routes/api.php`.
