@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import { Clock, BookOpen, AlertTriangle, ArrowLeft, Play } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
+import Table, { TableRow, TableCell } from '../../components/ui/Table'
 
 interface CategoryBreakdown {
   category: string
@@ -155,32 +156,21 @@ export default function CandidateInstructions() {
               <div>
                 <h3 className="font-medium text-slate-900 mb-2 text-sm">Category Breakdown</h3>
                 <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="text-left px-4 py-2 font-medium text-slate-500 text-xs uppercase tracking-wider">
-                          Category
-                        </th>
-                        <th className="text-center px-4 py-2 font-medium text-slate-500 text-xs uppercase tracking-wider">
-                          Questions
-                        </th>
-                        <th className="text-center px-4 py-2 font-medium text-slate-500 text-xs uppercase tracking-wider">
-                          Marks
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.category_breakdown.map((cat, i) => (
-                        <tr key={i} className="border-t border-slate-100">
-                          <td className="px-4 py-2 text-slate-700">{cat.category}</td>
-                          <td className="px-4 py-2 text-center text-slate-600">{cat.count}</td>
-                          <td className="px-4 py-2 text-center font-medium text-slate-900">
-                            {cat.marks}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <Table
+                    columns={[
+                      { key: 'category', header: 'Category' },
+                      { key: 'questions', header: 'Questions', className: 'text-center' },
+                      { key: 'marks', header: 'Marks', className: 'text-center' },
+                    ]}
+                  >
+                    {data.category_breakdown.map((cat, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{cat.category}</TableCell>
+                        <TableCell className="text-center">{cat.count}</TableCell>
+                        <TableCell className="text-center font-medium">{cat.marks}</TableCell>
+                      </TableRow>
+                    ))}
+                  </Table>
                 </div>
               </div>
             )}
