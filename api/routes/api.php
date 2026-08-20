@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CandidateController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MarkingController;
 use App\Http\Controllers\Api\QuestionController;
+use App\Http\Controllers\Api\ResultController;
 use App\Http\Controllers\Api\TestController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,10 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/marking/{test}', [MarkingController::class, 'show']);
     Route::put('/marking/{test}', [MarkingController::class, 'saveMarks']);
     Route::post('/marking/{test}/finalize', [MarkingController::class, 'finalize']);
+
+    Route::get('/dashboard/stats', [ResultController::class, 'dashboardStats']);
+    Route::get('/results', [ResultController::class, 'index']);
+    Route::get('/results/{test}', [ResultController::class, 'show']);
 });
 
 Route::prefix('candidate')->group(function () {

@@ -45,4 +45,27 @@ class TestFactory extends Factory
             'submitted_at' => now(),
         ]);
     }
+
+    public function ready(): static
+    {
+        return $this->state(fn () => [
+            'status' => 'ready',
+        ]);
+    }
+
+    public function inProgress(): static
+    {
+        return $this->state(fn () => [
+            'status' => 'in_progress',
+            'started_at' => now(),
+        ]);
+    }
+
+    public function expired(): static
+    {
+        return $this->state(fn () => [
+            'status' => 'expired',
+            'expires_at' => now()->subMinute(),
+        ]);
+    }
 }
