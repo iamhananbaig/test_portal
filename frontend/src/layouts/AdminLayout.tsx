@@ -10,8 +10,11 @@ import {
   LogOut,
   Menu,
   X,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import Button from '../components/ui/Button'
 
 const navItems = [
@@ -25,6 +28,7 @@ const navItems = [
 
 export default function AdminLayout() {
   const { user, logout } = useAuth()
+  const { theme, toggle } = useTheme()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -34,7 +38,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity lg:hidden"
@@ -43,15 +47,15 @@ export default function AdminLayout() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 transition-transform duration-200 lg:static lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-14 items-center justify-between border-b border-slate-100 px-5">
-          <h1 className="text-sm font-semibold tracking-tight text-slate-900">Test Portal</h1>
+        <div className="flex h-14 items-center justify-between border-b border-slate-100 dark:border-slate-700 px-5">
+          <h1 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">Test Portal</h1>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="rounded-lg p-1 text-slate-400 hover:text-slate-600 lg:hidden"
+            className="rounded-lg p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 lg:hidden"
           >
             <X className="h-4 w-4" />
           </button>
@@ -66,8 +70,8 @@ export default function AdminLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white'
                 }`
               }
             >
@@ -76,12 +80,12 @@ export default function AdminLayout() {
             </NavLink>
           ))}
         </nav>
-        <div className="border-t border-slate-100 px-4 py-3">
-          <div className="mb-1.5 truncate text-xs font-medium text-slate-900">{user?.name}</div>
+        <div className="border-t border-slate-100 dark:border-slate-700 px-4 py-3">
+          <div className="mb-1.5 truncate text-xs font-medium text-slate-900 dark:text-white">{user?.name}</div>
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start gap-2 text-slate-500"
+            className="w-full justify-start gap-2 text-slate-500 dark:text-slate-400"
             onClick={handleLogout}
           >
             <LogOut className="h-3.5 w-3.5" />
@@ -91,15 +95,24 @@ export default function AdminLayout() {
       </aside>
 
       <main className="flex-1 overflow-auto">
-        <div className="flex items-center border-b border-slate-200 bg-white px-4 py-2.5 lg:hidden">
+        <div className="flex items-center border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            className="rounded-lg p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="ml-2.5 text-sm font-semibold text-slate-900">Test Portal</h1>
+          <h1 className="ml-2.5 text-sm font-semibold text-slate-900 dark:text-white">Test Portal</h1>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={toggle}
+              className="rounded-lg p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
         <div className="mx-auto max-w-6xl px-6 py-6">
           <Outlet />
