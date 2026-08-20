@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { HelpCircle, Plus } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -31,18 +31,29 @@ interface Question {
 
 export default function QuestionBank() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [questions, setQuestions] = useState<Question[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState({
-    category_id: '',
-    type: '',
-    is_active: '',
-    search: '',
-  })
-  const [page, setPage] = useState(1)
+  const filters = {
+    category_id: searchParams.get('category_id') || '',
+    type: searchParams.get('type') || '',
+    is_active: searchParams.get('is_active') || '',
+    search: searchParams.get('search') || '',
+  }
+  const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1)
   const [totalPages, setTotalPages] = useState(1)
   const debouncedSearch = useDebounce(filters.search, 300)
+
+  const updateFilter = (key: string, value: string) => {
+    setSearchParams((prev) => {
+      if (value) prev.set(key, value)
+      else prev.delete(key)
+      prev.delete('page')
+      return prev
+    })
+    setPage(1)
+  }
 
   const refetchCategories = useCallback(() => {
     let cancelled = false
@@ -120,10 +131,7 @@ export default function QuestionBank() {
             <Select
               label="Category"
               value={filters.category_id}
-              onChange={(e) => {
-                setFilters({ ...filters, category_id: e.target.value })
-                setPage(1)
-              }}
+              onChange={(e) => updateFilter('category_id', e.target.value)}
               options={[
                 { value: '', label: 'All' },
                 ...categories.map((c) => ({ value: c.id, label: c.name })),
@@ -132,10 +140,7 @@ export default function QuestionBank() {
             <Select
               label="Type"
               value={filters.type}
-              onChange={(e) => {
-                setFilters({ ...filters, type: e.target.value })
-                setPage(1)
-              }}
+              onChange={(e) => updateFilter('type', e.target.value)}
               options={[
                 { value: '', label: 'All' },
                 { value: 'mcq', label: 'MCQ' },
@@ -145,10 +150,7 @@ export default function QuestionBank() {
             <Select
               label="Status"
               value={filters.is_active}
-              onChange={(e) => {
-                setFilters({ ...filters, is_active: e.target.value })
-                setPage(1)
-              }}
+              onChange={(e) => updateFilter('is_active', e.target.value)}
               options={[
                 { value: '', label: 'All' },
                 { value: '1', label: 'Active' },
@@ -159,10 +161,7 @@ export default function QuestionBank() {
               label="Search"
               placeholder="Search questions..."
               value={filters.search}
-              onChange={(e) => {
-                setFilters({ ...filters, search: e.target.value })
-                setPage(1)
-              }}
+              onChange={(e) => updateFilter('search', e.target.value)}
             />
           </div>
 
@@ -238,7 +237,10 @@ export default function QuestionBank() {
                   </TableRow>
                 ))}
               </Table>
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <Pagination page={page} totalPages={totalPages} onPageChange={(p) => {
+                setPage(p)
+                setSearchParams((prev) => { prev.set('page', String(p)); return prev })
+              }} />
             </>
           )}
         </CardContent>

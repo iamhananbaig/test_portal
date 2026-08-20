@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { BarChart3 } from 'lucide-react'
 import api from '../../services/api'
 import Input from '../../components/ui/Input'
@@ -32,12 +32,26 @@ interface Result {
 
 export default function Results() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [results, setResults] = useState<Result[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState({ status: '', search: '' })
-  const [page, setPage] = useState(1)
+  const filters = {
+    status: searchParams.get('status') || '',
+    search: searchParams.get('search') || '',
+  }
+  const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1)
   const [totalPages, setTotalPages] = useState(1)
   const debouncedSearch = useDebounce(filters.search, 300)
+
+  const updateFilter = (key: string, value: string) => {
+    setSearchParams((prev) => {
+      if (value) prev.set(key, value)
+      else prev.delete(key)
+      prev.delete('page')
+      return prev
+    })
+    setPage(1)
+  }
 
   const refetch = useCallback(() => {
     let cancelled = false
@@ -77,10 +91,7 @@ export default function Results() {
             <Select
               label="Status"
               value={filters.status}
-              onChange={(e) => {
-                setFilters({ ...filters, status: e.target.value })
-                setPage(1)
-              }}
+              onChange={(e) => updateFilter('status', e.target.value)}
               options={[
                 { value: '', label: 'All' },
                 { value: 'completed', label: 'Completed' },
@@ -92,10 +103,7 @@ export default function Results() {
                 label="Search"
                 placeholder="Search by name, CNIC, or Test ID..."
                 value={filters.search}
-                onChange={(e) => {
-                  setFilters({ ...filters, search: e.target.value })
-                  setPage(1)
-                }}
+                onChange={(e) => updateFilter('search', e.target.value)}
               />
             </div>
           </div>
@@ -169,7 +177,10 @@ export default function Results() {
                   </TableRow>
                 ))}
               </Table>
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <Pagination page={page} totalPages={totalPages} onPageChange={(p) => {
+                setPage(p)
+                setSearchParams((prev) => { prev.set('page', String(p)); return prev })
+              }} />
             </>
           )}
         </CardContent>

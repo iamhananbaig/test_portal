@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { FileText, Plus } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -29,12 +29,26 @@ interface Test {
 
 export default function TestList() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [tests, setTests] = useState<Test[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState({ status: '', search: '' })
-  const [page, setPage] = useState(1)
+  const filters = {
+    status: searchParams.get('status') || '',
+    search: searchParams.get('search') || '',
+  }
+  const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1)
   const [totalPages, setTotalPages] = useState(1)
   const debouncedSearch = useDebounce(filters.search, 300)
+
+  const updateFilter = (key: string, value: string) => {
+    setSearchParams((prev) => {
+      if (value) prev.set(key, value)
+      else prev.delete(key)
+      prev.delete('page')
+      return prev
+    })
+    setPage(1)
+  }
 
   const refetch = useCallback(() => {
     let cancelled = false
@@ -81,10 +95,7 @@ export default function TestList() {
             <Select
               label="Status"
               value={filters.status}
-              onChange={(e) => {
-                setFilters({ ...filters, status: e.target.value })
-                setPage(1)
-              }}
+              onChange={(e) => updateFilter('status', e.target.value)}
               options={[
                 { value: '', label: 'All' },
                 { value: 'ready', label: 'Ready' },
@@ -100,10 +111,7 @@ export default function TestList() {
                 label="Search"
                 placeholder="Search by name, CNIC, or Test ID..."
                 value={filters.search}
-                onChange={(e) => {
-                  setFilters({ ...filters, search: e.target.value })
-                  setPage(1)
-                }}
+                onChange={(e) => updateFilter('search', e.target.value)}
               />
             </div>
           </div>
@@ -161,7 +169,10 @@ export default function TestList() {
                   </TableRow>
                 ))}
               </Table>
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <Pagination page={page} totalPages={totalPages} onPageChange={(p) => {
+                setPage(p)
+                setSearchParams((prev) => { prev.set('page', String(p)); return prev })
+              }} />
             </>
           )}
         </CardContent>
