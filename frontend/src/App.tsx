@@ -12,6 +12,8 @@ import TestCreate from './pages/admin/TestCreate'
 import TestList from './pages/admin/TestList'
 import Marking from './pages/admin/Marking'
 import MarkingDetail from './pages/admin/MarkingDetail'
+import Results from './pages/admin/Results'
+import ResultDetail from './pages/admin/ResultDetail'
 import CandidateLogin from './pages/candidate/CandidateLogin'
 import CandidateInstructions from './pages/candidate/CandidateInstructions'
 import CandidateTest from './pages/candidate/CandidateTest'
@@ -46,6 +48,8 @@ export default function App() {
           <Route path="tests/new" element={<TestCreate />} />
           <Route path="marking" element={<Marking />} />
           <Route path="marking/:id" element={<MarkingDetail />} />
+          <Route path="results" element={<Results />} />
+          <Route path="results/:id" element={<ResultDetail />} />
         </Route>
         <Route path="/candidate" element={<CandidateLogin />} />
         <Route path="/candidate/:testId/instructions" element={<CandidateInstructions />} />
