@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router'
 import { AuthProvider } from './context/AuthContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import RequireAuth from './components/RequireAuth'
 import GuestRoute from './components/GuestRoute'
 import AdminLayout from './layouts/AdminLayout'
@@ -23,6 +24,7 @@ import NotFound from './pages/NotFound'
 export default function App() {
   return (
     <AuthProvider>
+      <ErrorBoundary>
       <Routes>
         <Route
           path="/admin/login"
@@ -58,6 +60,7 @@ export default function App() {
         <Route path="/candidate/:testId/complete" element={<CandidateComplete />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </ErrorBoundary>
     </AuthProvider>
   )
 }

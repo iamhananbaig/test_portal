@@ -46,12 +46,18 @@ export default function CandidateTest() {
 
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const lastAnswerRef = useRef<{ questionId: number; selectedOptionId: number | null; descriptiveAnswer: string | null } | null>(null)
 
   const loadQuestions = useCallback(async () => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     try {
       const res = await fetch(`/api/candidate/${testId}/questions`, {
         headers: { Accept: 'application/json' },
+        signal: controller.signal,
       })
 
       if (!res.ok) {
@@ -88,6 +94,7 @@ export default function CandidateTest() {
 
   useEffect(() => {
     return () => {
+      abortRef.current?.abort()
       if (autosaveTimerRef.current) {
         clearTimeout(autosaveTimerRef.current)
       }
@@ -104,24 +111,27 @@ export default function CandidateTest() {
   }, [])
 
   useEffect(() => {
-    if (remainingSeconds <= 0 && !loading && data) {
-      const submitOnExpiry = async () => {
-        try {
-          await fetch(`/api/candidate/${testId}/submit`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          })
-        } catch { /* server may have already auto-submitted */ }
-        navigate(`/candidate/${testId}/complete`)
-      }
-      submitOnExpiry()
-      return
+    if (loading || !data) return
+    if (remainingSeconds > 0) return
+
+    const submitOnExpiry = async () => {
+      try {
+        await fetch(`/api/candidate/${testId}/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        })
+      } catch { /* server may have already auto-submitted */ }
+      navigate(`/candidate/${testId}/complete`)
     }
+    submitOnExpiry()
+  }, [remainingSeconds, loading, data, testId, navigate])
+
+  useEffect(() => {
+    if (loading || !data || remainingSeconds <= 0) return
 
     countdownRef.current = setInterval(() => {
       setRemainingSeconds((prev) => {
         if (prev <= 1) {
-          if (countdownRef.current) clearInterval(countdownRef.current)
           return 0
         }
         return prev - 1
@@ -131,7 +141,7 @@ export default function CandidateTest() {
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current)
     }
-  }, [loading, data, testId, navigate])
+  }, [loading, data, remainingSeconds > 0])
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600)
@@ -142,6 +152,7 @@ export default function CandidateTest() {
 
   const saveAnswer = useCallback(async (questionId: number, selectedOptionId: number | null, descriptiveAnswer: string | null) => {
     setSaveStatus('saving')
+    const controller = new AbortController()
     try {
       const res = await fetch(`/api/candidate/${testId}/answer`, {
         method: 'PUT',
@@ -151,6 +162,7 @@ export default function CandidateTest() {
           selected_option_id: selectedOptionId,
           descriptive_answer: descriptiveAnswer,
         }),
+        signal: controller.signal,
       })
 
       if (!res.ok) {
@@ -233,6 +245,11 @@ export default function CandidateTest() {
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current)
+        autosaveTimerRef.current = null
+      }
+
       if (lastAnswerRef.current) {
         const { questionId, selectedOptionId, descriptiveAnswer } = lastAnswerRef.current
         await saveAnswer(questionId, selectedOptionId, descriptiveAnswer)

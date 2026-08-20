@@ -48,16 +48,22 @@ export default function QuestionBank() {
       if (debouncedSearch) params.search = debouncedSearch
 
       const response = await api.get('/questions', { params })
-      setQuestions(response.data.data)
-      setTotalPages(response.data.meta.last_page)
+      setQuestions(response.data?.data ?? [])
+      setTotalPages(response.data?.meta?.last_page ?? 1)
+    } catch {
+      setQuestions([])
     } finally {
       setLoading(false)
     }
   }
 
   const fetchCategories = async () => {
-    const response = await api.get('/categories', { params: { per_page: 100 } })
-    setCategories(response.data.data)
+    try {
+      const response = await api.get('/categories', { params: { per_page: 100 } })
+      setCategories(response.data?.data ?? [])
+    } catch {
+      setCategories([])
+    }
   }
 
   useEffect(() => {
@@ -124,14 +130,15 @@ export default function QuestionBank() {
           ) : (
             <>
               <table className="w-full text-left text-sm">
+                <caption className="sr-only">Questions list</caption>
                 <thead>
                   <tr className="border-b border-gray-200 text-gray-600">
-                    <th className="pb-3 font-medium">Category</th>
-                    <th className="pb-3 font-medium">Type</th>
-                    <th className="pb-3 font-medium">Question</th>
-                    <th className="pb-3 font-medium">Marks</th>
-                    <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Actions</th>
+                    <th scope="col" className="pb-3 font-medium">Category</th>
+                    <th scope="col" className="pb-3 font-medium">Type</th>
+                    <th scope="col" className="pb-3 font-medium">Question</th>
+                    <th scope="col" className="pb-3 font-medium">Marks</th>
+                    <th scope="col" className="pb-3 font-medium">Status</th>
+                    <th scope="col" className="pb-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
