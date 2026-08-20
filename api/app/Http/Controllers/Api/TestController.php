@@ -72,4 +72,23 @@ class TestController extends Controller
     {
         return new TestResource($test->load(['test_questions.question', 'test_questions.category']));
     }
+
+    public function start(Test $test): JsonResponse
+    {
+        if ($test->status !== 'ready') {
+            return response()->json(['message' => 'Test cannot be started.'], 422);
+        }
+
+        $now = now();
+        $test->update([
+            'status' => 'in_progress',
+            'started_at' => $now,
+            'expires_at' => $now->copy()->addMinutes($test->duration_minutes),
+        ]);
+
+        return response()->json([
+            'message' => 'Test started.',
+            'data' => new TestResource($test->fresh(['test_questions.question', 'test_questions.category'])),
+        ]);
+    }
 }

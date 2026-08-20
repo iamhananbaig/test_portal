@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CandidateController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\TestController;
@@ -24,4 +25,17 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/tests/generate', [TestController::class, 'generate']);
     Route::get('/tests', [TestController::class, 'index']);
     Route::get('/tests/{test}', [TestController::class, 'show']);
+    Route::post('/tests/{test}/start', [TestController::class, 'start']);
+});
+
+Route::prefix('candidate')->group(function () {
+    Route::post('/validate', [CandidateController::class, 'validateTest']);
+    Route::get('/{test}/instructions', [CandidateController::class, 'instructions']);
+    Route::post('/{test}/start', [CandidateController::class, 'start']);
+    Route::get('/{test}/questions', [CandidateController::class, 'questions']);
+    Route::put('/{test}/answer', [CandidateController::class, 'answer']);
+    Route::put('/{test}/flag', [CandidateController::class, 'flag']);
+    Route::post('/{test}/submit', [CandidateController::class, 'submit']);
+    Route::get('/{test}/status', [CandidateController::class, 'status']);
+    Route::get('/{test}/time', [CandidateController::class, 'timeRemaining']);
 });
