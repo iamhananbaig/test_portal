@@ -10,6 +10,8 @@ import QuestionBank from './pages/admin/QuestionBank'
 import QuestionForm from './pages/admin/QuestionForm'
 import TestCreate from './pages/admin/TestCreate'
 import TestList from './pages/admin/TestList'
+import Marking from './pages/admin/Marking'
+import MarkingDetail from './pages/admin/MarkingDetail'
 import CandidateLogin from './pages/candidate/CandidateLogin'
 import CandidateInstructions from './pages/candidate/CandidateInstructions'
 import CandidateTest from './pages/candidate/CandidateTest'
@@ -42,6 +44,8 @@ export default function App() {
           <Route path="questions/:id/edit" element={<QuestionForm />} />
           <Route path="tests" element={<TestList />} />
           <Route path="tests/new" element={<TestCreate />} />
+          <Route path="marking" element={<Marking />} />
+          <Route path="marking/:id" element={<MarkingDetail />} />
         </Route>
         <Route path="/candidate" element={<CandidateLogin />} />
         <Route path="/candidate/:testId/instructions" element={<CandidateInstructions />} />
