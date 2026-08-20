@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { HelpCircle, FolderOpen, FileText, PenLine } from 'lucide-react'
 import api from '../../services/api'
 import Card, { CardContent, CardHeader } from '../../components/ui/Card'
@@ -30,24 +30,15 @@ const statCards = [
 ] as const
 
 export default function Dashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const response = await api.get('/dashboard/stats')
+      return response.data
+    },
+  })
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true)
-      try {
-        const response = await api.get('/dashboard/stats')
-        setStats(response.data)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [])
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div>
         <Skeleton className="h-7 w-48 mb-6" />

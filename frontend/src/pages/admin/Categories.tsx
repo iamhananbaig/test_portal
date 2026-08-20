@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FolderOpen } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -23,25 +24,58 @@ interface Category {
 }
 
 export default function Categories() {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
-  const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const queryClient = useQueryClient()
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(categorySchema),
   })
 
-  const fetchCategories = async () => {
-    try {
+  const { data: categories = [], isLoading } = useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: async () => {
       const response = await api.get('/categories')
-      setCategories(response.data.data)
-    } finally {
-      setLoading(false)
-    }
-  }
+      return response.data.data
+    },
+  })
+
+  const createMutation = useMutation({
+    mutationFn: (data: { name: string }) => api.post('/categories', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      setToast({ message: 'Category created.', type: 'success' })
+      setModalOpen(false)
+    },
+    onError: () => {
+      setToast({ message: 'Failed to save category.', type: 'error' })
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => api.put(`/categories/${id}`, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      setToast({ message: 'Category updated.', type: 'success' })
+      setModalOpen(false)
+    },
+    onError: () => {
+      setToast({ message: 'Failed to save category.', type: 'error' })
+    },
+  })
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: number; is_active: boolean }) =>
+      api.put(`/categories/${id}`, { is_active }),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      setToast({
+        message: `Category ${vars.is_active ? 'deactivated' : 'activated'}.`,
+        type: 'success',
+      })
+    },
+  })
 
   const openCreate = () => {
     setEditingCategory(null)
@@ -55,33 +89,15 @@ export default function Categories() {
     setModalOpen(true)
   }
 
-  const onSubmit = async (data: { name: string }) => {
-    setSaving(true)
-    try {
-      if (editingCategory) {
-        await api.put(`/categories/${editingCategory.id}`, { name: data.name })
-        setToast({ message: 'Category updated.', type: 'success' })
-      } else {
-        await api.post('/categories', { name: data.name })
-        setToast({ message: 'Category created.', type: 'success' })
-      }
-      setModalOpen(false)
-      fetchCategories()
-    } catch {
-      setToast({ message: 'Failed to save category.', type: 'error' })
-    } finally {
-      setSaving(false)
+  const onSubmit = (data: { name: string }) => {
+    if (editingCategory) {
+      updateMutation.mutate({ id: editingCategory.id, name: data.name })
+    } else {
+      createMutation.mutate({ name: data.name })
     }
   }
 
-  const toggleActive = async (cat: Category) => {
-    await api.put(`/categories/${cat.id}`, { is_active: !cat.is_active })
-    setToast({
-      message: `Category ${cat.is_active ? 'deactivated' : 'activated'}.`,
-      type: 'success',
-    })
-    fetchCategories()
-  }
+  const isSaving = createMutation.isPending || updateMutation.isPending
 
   return (
     <div>
@@ -94,7 +110,7 @@ export default function Categories() {
 
       <Card className="mt-6">
         <CardContent>
-          {loading ? (
+          {isLoading ? (
             <div className="space-y-3 p-4">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex gap-4">
@@ -139,7 +155,7 @@ export default function Categories() {
                       <Button variant="ghost" size="sm" onClick={() => openEdit(cat)}>
                         Edit
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => toggleActive(cat)}>
+                      <Button variant="ghost" size="sm" onClick={() => toggleMutation.mutate({ id: cat.id, is_active: cat.is_active })}>
                         {cat.is_active ? 'Deactivate' : 'Activate'}
                       </Button>
                     </div>
@@ -160,7 +176,7 @@ export default function Categories() {
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit(onSubmit)} loading={saving}>
+            <Button onClick={handleSubmit(onSubmit)} loading={isSaving}>
               Save
             </Button>
           </>

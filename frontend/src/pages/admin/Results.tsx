@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import { BarChart3 } from 'lucide-react'
 import api from '../../services/api'
 import Input from '../../components/ui/Input'
@@ -33,14 +34,11 @@ interface Result {
 export default function Results() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [results, setResults] = useState<Result[]>([])
-  const [loading, setLoading] = useState(true)
   const filters = {
     status: searchParams.get('status') || '',
     search: searchParams.get('search') || '',
   }
   const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1)
-  const [totalPages, setTotalPages] = useState(1)
   const debouncedSearch = useDebounce(filters.search, 300)
 
   const updateFilter = (key: string, value: string) => {
@@ -53,33 +51,20 @@ export default function Results() {
     setPage(1)
   }
 
-  const refetch = useCallback(() => {
-    let cancelled = false
-
-    async function load() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['results', page, filters.status, debouncedSearch],
+    queryFn: async () => {
       const params: Record<string, string | number> = { page }
       if (filters.status) params.status = filters.status
       if (debouncedSearch) params.search = debouncedSearch
 
       const response = await api.get('/results', { params })
-      if (!cancelled) {
-        setResults(response.data.data)
-        setTotalPages(response.data.meta.last_page)
-      }
-    }
+      return { data: response.data.data, totalPages: response.data.meta.last_page }
+    },
+  })
 
-    load().finally(() => {
-      if (!cancelled) setLoading(false)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [page, filters.status, debouncedSearch])
-
-  useEffect(() => {
-    return refetch()
-  }, [refetch])
+  const results = data?.data ?? []
+  const totalPages = data?.totalPages ?? 1
 
   return (
     <div>
@@ -108,7 +93,7 @@ export default function Results() {
             </div>
           </div>
 
-          {loading ? (
+          {isLoading ? (
             <div className="space-y-3 p-4">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex gap-4">
@@ -139,7 +124,7 @@ export default function Results() {
                   { key: 'actions', header: 'Actions', className: 'text-right' },
                 ]}
               >
-                {results.map((result) => (
+                {results.map((result: Result) => (
                   <TableRow key={result.id}>
                     <TableCell>
                       <p className="font-medium text-slate-900 dark:text-slate-100">{result.candidate_name}</p>

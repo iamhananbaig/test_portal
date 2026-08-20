@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useForm } from 'react-hook-form'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -36,12 +37,8 @@ interface MarkingFormData {
 export default function MarkingDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [testInfo, setTestInfo] = useState<TestInfo | null>(null)
-  const [questions, setQuestions] = useState<DescriptiveQuestion[]>([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [finalizing, setFinalizing] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const queryClient = useQueryClient()
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<MarkingFormData>({
     defaultValues: { marks: {} },
@@ -49,64 +46,77 @@ export default function MarkingDetail() {
 
   const marksValues = watch('marks')
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function load() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['marking', id],
+    queryFn: async () => {
       const response = await api.get(`/marking/${id}`)
-      if (!cancelled) {
-        setTestInfo(response.data.test)
-        setQuestions(response.data.questions)
+      return response.data
+    },
+  })
 
-        const initialMarks: Record<string, string> = {}
-        response.data.questions.forEach((q: DescriptiveQuestion) => {
-          initialMarks[q.question_id] = q.awarded_marks !== null ? String(q.awarded_marks) : ''
-        })
-        reset({ marks: initialMarks })
-      }
+  const testInfo = data?.test as TestInfo | undefined
+  const questions = (data?.questions ?? []) as DescriptiveQuestion[]
+
+  // Initialize form values when data loads
+  useEffect(() => {
+    if (data) {
+      const initialMarks: Record<string, string> = {}
+      data.questions.forEach((q: DescriptiveQuestion) => {
+        initialMarks[q.question_id] = q.awarded_marks !== null ? String(q.awarded_marks) : ''
+      })
+      reset({ marks: initialMarks })
     }
+  }, [data, reset])
 
-    load().finally(() => {
-      if (!cancelled) setLoading(false)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [id, reset])
-
-  const onSave = async (data: MarkingFormData) => {
-    setSaving(true)
-    try {
-      const marksPayload = questions
-        .filter((q) => data.marks[q.question_id] !== '' && data.marks[q.question_id] !== undefined)
-        .map((q) => {
-          const parsed = parseFloat(data.marks[q.question_id])
-          return {
-            question_id: q.question_id,
-            awarded_marks: isNaN(parsed) ? 0 : Math.min(Math.max(parsed, 0), q.max_marks),
-          }
-        })
-
-      if (marksPayload.length === 0) {
-        setToast({ message: 'Please enter marks for at least one question.', type: 'error' })
-        return
-      }
-
-      await api.put(`/marking/${id}`, { marks: marksPayload })
+  const saveMutation = useMutation({
+    mutationFn: (marksPayload: { question_id: number; awarded_marks: number }[]) =>
+      api.put(`/marking/${id}`, { marks: marksPayload }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['marking', id] })
       setToast({ message: 'Marks saved successfully.', type: 'success' })
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } }
+    },
+    onError: (err: { response?: { data?: { message?: string } } }) => {
       setToast({
-        message: error.response?.data?.message || 'Failed to save marks.',
+        message: err.response?.data?.message || 'Failed to save marks.',
         type: 'error',
       })
-    } finally {
-      setSaving(false)
+    },
+  })
+
+  const finalizeMutation = useMutation({
+    mutationFn: () => api.post(`/marking/${id}/finalize`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['marking', id] })
+      setToast({ message: 'Test finalized successfully.', type: 'success' })
+    },
+    onError: (err: { response?: { data?: { message?: string } } }) => {
+      setToast({
+        message: err.response?.data?.message || 'Failed to finalize.',
+        type: 'error',
+      })
+    },
+  })
+
+  const onSave = (formData: MarkingFormData) => {
+    const marksPayload = questions
+      .filter((q) => formData.marks[q.question_id] !== '' && formData.marks[q.question_id] !== undefined)
+      .map((q) => {
+        const parsed = parseFloat(formData.marks[q.question_id])
+        return {
+          question_id: q.question_id,
+          awarded_marks: isNaN(parsed) ? 0 : Math.min(Math.max(parsed, 0), q.max_marks),
+        }
+      })
+
+    if (marksPayload.length === 0) {
+      setToast({ message: 'Please enter marks for at least one question.', type: 'error' })
+      return
     }
+
+    saveMutation.mutate(marksPayload)
   }
 
-  const handleFinalize = async () => {
+  const handleFinalize = () => {
     if (
       !window.confirm(
         'Are you sure? This action cannot be undone. All marks will be finalized.',
@@ -114,22 +124,10 @@ export default function MarkingDetail() {
     )
       return
 
-    setFinalizing(true)
-    try {
-      await api.post(`/marking/${id}/finalize`)
-      setToast({ message: 'Test finalized successfully.', type: 'success' })
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } }
-      setToast({
-        message: error.response?.data?.message || 'Failed to finalize.',
-        type: 'error',
-      })
-    } finally {
-      setFinalizing(false)
-    }
+    finalizeMutation.mutate()
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="py-12 px-6 space-y-4">
         <Skeleton className="h-8 w-64 mb-6" />
@@ -223,13 +221,13 @@ export default function MarkingDetail() {
 
       {!isCompleted && (
         <div className="mt-6 flex gap-3">
-          <Button onClick={handleSubmit(onSave)} loading={saving}>
+          <Button onClick={handleSubmit(onSave)} loading={saveMutation.isPending}>
             Save Marks
           </Button>
           <Button
             variant="secondary"
             onClick={handleFinalize}
-            loading={finalizing}
+            loading={finalizeMutation.isPending}
             disabled={!allMarked}
           >
             Finalize Test

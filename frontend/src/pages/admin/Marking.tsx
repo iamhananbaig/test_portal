@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import { PenLine } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -25,34 +26,18 @@ interface Test {
 
 export default function Marking() {
   const navigate = useNavigate()
-  const [tests, setTests] = useState<Test[]>([])
-  const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
 
-  const refetch = useCallback(() => {
-    let cancelled = false
-
-    async function load() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['marking-pending', page],
+    queryFn: async () => {
       const response = await api.get('/marking/pending', { params: { page } })
-      if (!cancelled) {
-        setTests(response.data.data)
-        setTotalPages(response.data.meta.last_page)
-      }
-    }
+      return { data: response.data.data, totalPages: response.data.meta.last_page }
+    },
+  })
 
-    load().finally(() => {
-      if (!cancelled) setLoading(false)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [page])
-
-  useEffect(() => {
-    return refetch()
-  }, [refetch])
+  const tests = data?.data ?? []
+  const totalPages = data?.totalPages ?? 1
 
   return (
     <div>
@@ -63,7 +48,7 @@ export default function Marking() {
 
       <Card className="mt-6">
         <CardContent>
-          {loading ? (
+          {isLoading ? (
             <div className="space-y-3 p-4">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="flex gap-4">
@@ -94,7 +79,7 @@ export default function Marking() {
                   { key: 'action', header: '', className: 'text-right' },
                 ]}
               >
-                {tests.map((test) => (
+                {tests.map((test: Test) => (
                   <TableRow key={test.id}>
                     <TableCell>
                       <p className="font-medium text-slate-900 dark:text-slate-100">{test.candidate_name}</p>

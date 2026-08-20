@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { ClipboardCopy, CheckCircle } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -28,12 +29,19 @@ type TestGenerateFormData = {
 
 export default function TestCreate() {
   const navigate = useNavigate()
-  const [categories, setCategories] = useState<Category[]>([])
   const [error, setError] = useState('')
   const [successModal, setSuccessModal] = useState(false)
   const [generatedTestId, setGeneratedTestId] = useState('')
   const [generatedExpiry, setGeneratedExpiry] = useState('')
   const [copied, setCopied] = useState(false)
+
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const response = await api.get('/categories', { params: { per_page: 100 } })
+      return response.data.data.filter((c: Category) => c.is_active)
+    },
+  })
 
   const { register, handleSubmit, control, watch, formState: { errors } } = useForm<TestGenerateFormData>({
     resolver: zodResolver(testGenerateSchema),
@@ -52,15 +60,51 @@ export default function TestCreate() {
 
   const categoryRows = watch('category_rows')
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const response = await api.get('/categories', { params: { per_page: 100 } })
-      setCategories(
-        response.data.data.filter((c: Category) => c.is_active),
-      )
+  const generateMutation = useMutation({
+    mutationFn: (payload: {
+      candidate_name: string
+      candidate_cnic: string
+      categories: { category_id: number; count: number }[]
+      duration_minutes: number
+    }) => api.post('/tests/generate', payload),
+    onSuccess: (response) => {
+      setGeneratedTestId(response.data.data.test_id)
+      setGeneratedExpiry(response.data.data.expires_at)
+      setSuccessModal(true)
+      setError('')
+    },
+    onError: (err: { response?: { data?: { message?: string } } }) => {
+      setError(err.response?.data?.message || 'Failed to generate test')
+    },
+  })
+
+  const onSubmit = (data: TestGenerateFormData) => {
+    setError('')
+    const categoriesPayload = data.category_rows
+      .filter((r) => r.category_id && r.count)
+      .map((r) => ({
+        category_id: Number(r.category_id),
+        count: Number(r.count),
+      }))
+
+    if (categoriesPayload.length === 0) {
+      setError('Add at least one category with question count')
+      return
     }
-    fetchCategories()
-  }, [])
+
+    generateMutation.mutate({
+      candidate_name: data.candidate_name,
+      candidate_cnic: data.candidate_cnic,
+      categories: categoriesPayload,
+      duration_minutes: Number(data.duration),
+    })
+  }
+
+  const copyTestId = () => {
+    navigator.clipboard.writeText(generatedTestId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const availableCategories = (excludeIndex: number) => {
     const usedIds = categoryRows
@@ -68,45 +112,6 @@ export default function TestCreate() {
       .map((r) => r.category_id)
       .filter(Boolean)
     return categories.filter((c) => !usedIds.includes(String(c.id)))
-  }
-
-  const onSubmit = async (data: TestGenerateFormData) => {
-    setError('')
-    try {
-      const categoriesPayload = data.category_rows
-        .filter((r) => r.category_id && r.count)
-        .map((r) => ({
-          category_id: Number(r.category_id),
-          count: Number(r.count),
-        }))
-
-      if (categoriesPayload.length === 0) {
-        setError('Add at least one category with question count')
-        return
-      }
-
-      const response = await api.post('/tests/generate', {
-        candidate_name: data.candidate_name,
-        candidate_cnic: data.candidate_cnic,
-        categories: categoriesPayload,
-        duration_minutes: Number(data.duration),
-      })
-
-      setGeneratedTestId(response.data.data.test_id)
-      setGeneratedExpiry(response.data.data.expires_at)
-      setSuccessModal(true)
-    } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as { response?: { data?: { message?: string } } }
-        setError(axiosErr.response?.data?.message || 'Failed to generate test')
-      }
-    }
-  }
-
-  const copyTestId = () => {
-    navigator.clipboard.writeText(generatedTestId)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -199,6 +204,7 @@ export default function TestCreate() {
             </Button>
             <Button
               onClick={handleSubmit(onSubmit)}
+              loading={generateMutation.isPending}
             >
               Generate Test
             </Button>

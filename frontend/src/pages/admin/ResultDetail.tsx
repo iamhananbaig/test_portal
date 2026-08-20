@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -65,30 +65,21 @@ function formatStatusLabel(status: string): string {
 export default function ResultDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [testInfo, setTestInfo] = useState<TestInfo | null>(null)
-  const [result, setResult] = useState<ResultInfo | null>(null)
-  const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([])
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const response = await api.get(`/results/${id}`)
-        setTestInfo(response.data.test)
-        setResult(response.data.result)
-        setCategoryBreakdown(response.data.category_breakdown)
-        setQuestions(response.data.questions)
-      } finally {
-        setLoading(false)
-      }
-    }
+  const { data, isLoading } = useQuery({
+    queryKey: ['result', id],
+    queryFn: async () => {
+      const response = await api.get(`/results/${id}`)
+      return response.data
+    },
+  })
 
-    fetchData()
-  }, [id])
+  const testInfo = data?.test as TestInfo | undefined
+  const result = data?.result as ResultInfo | undefined
+  const categoryBreakdown = (data?.category_breakdown ?? []) as CategoryBreakdown[]
+  const questions = (data?.questions ?? []) as Question[]
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="py-12 px-6 space-y-6">
         <Skeleton className="h-8 w-64" />

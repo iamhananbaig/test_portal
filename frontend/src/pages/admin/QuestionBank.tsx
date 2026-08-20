@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { HelpCircle, Plus } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
@@ -32,9 +33,7 @@ interface Question {
 export default function QuestionBank() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
   const filters = {
     category_id: searchParams.get('category_id') || '',
     type: searchParams.get('type') || '',
@@ -42,7 +41,6 @@ export default function QuestionBank() {
     search: searchParams.get('search') || '',
   }
   const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1)
-  const [totalPages, setTotalPages] = useState(1)
   const debouncedSearch = useDebounce(filters.search, 300)
 
   const updateFilter = (key: string, value: string) => {
@@ -55,27 +53,17 @@ export default function QuestionBank() {
     setPage(1)
   }
 
-  const refetchCategories = useCallback(() => {
-    let cancelled = false
-
-    async function load() {
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: async () => {
       const response = await api.get('/categories', { params: { per_page: 100 } })
-      if (!cancelled) {
-        setCategories(response.data?.data ?? [])
-      }
-    }
+      return response.data?.data ?? []
+    },
+  })
 
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const refetchQuestions = useCallback(() => {
-    let cancelled = false
-
-    async function load() {
+  const { data: questionsData, isLoading } = useQuery({
+    queryKey: ['questions', page, filters.category_id, filters.type, filters.is_active, debouncedSearch],
+    queryFn: async () => {
       const params: Record<string, string | number> = { page }
       if (filters.category_id) params.category_id = filters.category_id
       if (filters.type) params.type = filters.type
@@ -83,33 +71,19 @@ export default function QuestionBank() {
       if (debouncedSearch) params.search = debouncedSearch
 
       const response = await api.get('/questions', { params })
-      if (!cancelled) {
-        setQuestions(response.data?.data ?? [])
-        setTotalPages(response.data?.meta?.last_page ?? 1)
-      }
-    }
+      return { data: response.data?.data ?? [], totalPages: response.data?.meta?.last_page ?? 1 }
+    },
+  })
 
-    load().finally(() => {
-      if (!cancelled) setLoading(false)
-    })
+  const questions = questionsData?.data ?? []
+  const totalPages = questionsData?.totalPages ?? 1
 
-    return () => {
-      cancelled = true
-    }
-  }, [page, filters.category_id, filters.type, filters.is_active, debouncedSearch])
-
-  useEffect(() => {
-    return refetchCategories()
-  }, [refetchCategories])
-
-  useEffect(() => {
-    return refetchQuestions()
-  }, [refetchQuestions])
-
-  const toggleStatus = async (q: Question) => {
-    await api.put(`/questions/${q.id}/status`)
-    refetchQuestions()
-  }
+  const toggleMutation = useMutation({
+    mutationFn: (q: Question) => api.put(`/questions/${q.id}/status`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] })
+    },
+  })
 
   return (
     <div>
@@ -165,7 +139,7 @@ export default function QuestionBank() {
             />
           </div>
 
-          {loading ? (
+          {isLoading ? (
             <div className="space-y-3 p-4">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex gap-4">
@@ -205,7 +179,7 @@ export default function QuestionBank() {
                 ]}
                 caption="Questions list"
               >
-                {questions.map((q) => (
+                {questions.map((q: Question) => (
                   <TableRow key={q.id}>
                     <TableCell>{q.category?.name}</TableCell>
                     <TableCell>
@@ -229,7 +203,7 @@ export default function QuestionBank() {
                         >
                           Edit
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => toggleStatus(q)}>
+                        <Button variant="ghost" size="sm" onClick={() => toggleMutation.mutate(q)}>
                           {q.is_active ? 'Deactivate' : 'Activate'}
                         </Button>
                       </div>
