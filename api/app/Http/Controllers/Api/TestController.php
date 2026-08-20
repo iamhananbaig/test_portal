@@ -63,7 +63,7 @@ class TestController extends Controller
             });
         }
 
-        $tests = $query->latest()->paginate($request->input('per_page', 15));
+        $tests = $query->latest()->paginate(min((int) $request->input('per_page', 15), 100));
 
         return TestResource::collection($tests);
     }

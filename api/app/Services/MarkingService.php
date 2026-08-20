@@ -63,7 +63,7 @@ class MarkingService
             }
 
             $descriptiveMarks = $this->calculateDescriptiveMarks($test);
-            $test->result->update(['descriptive_marks' => $descriptiveMarks]);
+            $test->result?->update(['descriptive_marks' => $descriptiveMarks]);
         });
     }
 

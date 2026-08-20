@@ -90,10 +90,14 @@ class TestGenerationService
 
     private function generateUniqueId(): string
     {
-        do {
+        $maxAttempts = 10;
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
             $id = strtoupper(Str::random(4).'-'.Str::random(4));
-        } while (Test::where('test_id', $id)->exists());
+            if (! Test::where('test_id', $id)->exists()) {
+                return $id;
+            }
+        }
 
-        return $id;
+        throw new \RuntimeException('Failed to generate a unique test ID after '.$maxAttempts.' attempts.');
     }
 }

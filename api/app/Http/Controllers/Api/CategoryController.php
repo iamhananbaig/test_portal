@@ -15,7 +15,7 @@ class CategoryController extends Controller
     {
         $categories = Category::withCount('questions')
             ->latest()
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
 
         return CategoryResource::collection($categories);
     }

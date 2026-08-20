@@ -20,7 +20,7 @@ class MarkingController extends Controller
         $tests = Test::query()
             ->where('status', 'pending_review')
             ->latest()
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
 
         return TestResource::collection($tests);
     }

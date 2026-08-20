@@ -90,6 +90,12 @@ class CandidateController extends Controller
             return response()->json(['message' => 'Test is not in progress.'], 422);
         }
 
+        if (now()->greaterThan($test->expires_at)) {
+            $this->autoSubmit($test);
+
+            return response()->json(['message' => 'Time has expired. Test auto-submitted.', 'auto_submitted' => true], 408);
+        }
+
         $testQuestions = TestQuestion::where('test_id', $test->id)
             ->with(['question', 'question.options', 'category'])
             ->get();
@@ -187,9 +193,23 @@ class CandidateController extends Controller
             return response()->json(['message' => 'Test is not in progress.'], 422);
         }
 
+        if (now()->greaterThan($test->expires_at)) {
+            $this->autoSubmit($test);
+
+            return response()->json(['message' => 'Time has expired. Test auto-submitted.', 'auto_submitted' => true], 408);
+        }
+
         $validated = $request->validate([
             'question_id' => ['required', 'exists:questions,id'],
         ]);
+
+        $questionBelongsToTest = TestQuestion::where('test_id', $test->id)
+            ->where('question_id', $validated['question_id'])
+            ->exists();
+
+        if (! $questionBelongsToTest) {
+            return response()->json(['message' => 'Question does not belong to this test.'], 422);
+        }
 
         $answer = CandidateAnswer::where('test_id', $test->id)
             ->where('question_id', $validated['question_id'])
@@ -216,13 +236,30 @@ class CandidateController extends Controller
             return response()->json(['message' => 'Test is not in progress.'], 422);
         }
 
-        $this->submitTest($test, 'manual');
+        DB::transaction(function () use ($test) {
+            $test = Test::lockForUpdate()->find($test->id);
+
+            if (! in_array($test->status, ['in_progress'])) {
+                return;
+            }
+
+            $this->submitTest($test, 'manual');
+        });
 
         return response()->json(['message' => 'Test submitted successfully.', 'submitted' => true]);
     }
 
     public function status(Test $test): JsonResponse
     {
+        if ($test->status === 'in_progress' && now()->greaterThan($test->expires_at)) {
+            $this->autoSubmit($test);
+
+            return response()->json([
+                'status' => 'completed',
+                'auto_submitted' => true,
+            ]);
+        }
+
         return response()->json([
             'status' => $test->status,
             'submitted_at' => $test->submitted_at?->toISOString(),
@@ -268,12 +305,11 @@ class CandidateController extends Controller
         $now = now();
 
         DB::transaction(function () use ($test, $now, $method) {
-            $test->update([
-                'status' => 'submitted',
-                'submitted_at' => $now,
-                'ends_at' => $now,
-                'submission_method' => $method,
-            ]);
+            $test = Test::lockForUpdate()->find($test->id);
+
+            if ($test->status !== 'in_progress') {
+                return;
+            }
 
             $answers = CandidateAnswer::where('test_id', $test->id)
                 ->whereNotNull('selected_option_id')
@@ -300,15 +336,28 @@ class CandidateController extends Controller
 
             $status = $hasDescriptive ? 'pending_review' : 'completed';
 
-            Result::create([
-                'test_id' => $test->id,
-                'mcq_marks' => $mcqMarks,
-                'descriptive_marks' => 0,
-                'total_obtained' => $mcqMarks,
-                'is_finalized' => ! $hasDescriptive,
+            $test->update([
+                'status' => $status,
+                'submitted_at' => $now,
+                'ends_at' => $now,
+                'submission_method' => $method,
             ]);
 
-            $test->update(['status' => $status]);
+            $existingResult = Result::where('test_id', $test->id)->first();
+            if ($existingResult) {
+                $existingResult->update([
+                    'mcq_marks' => $mcqMarks,
+                    'total_obtained' => $mcqMarks + (float) $existingResult->descriptive_marks,
+                ]);
+            } else {
+                Result::create([
+                    'test_id' => $test->id,
+                    'mcq_marks' => $mcqMarks,
+                    'descriptive_marks' => 0,
+                    'total_obtained' => $mcqMarks,
+                    'is_finalized' => ! $hasDescriptive,
+                ]);
+            }
         });
     }
 }

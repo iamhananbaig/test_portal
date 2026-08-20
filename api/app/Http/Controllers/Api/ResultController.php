@@ -31,7 +31,7 @@ class ResultController extends Controller
         }
 
         $results = $query->latest()
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
 
         return ResultResource::collection($results);
     }

@@ -37,7 +37,7 @@ class QuestionController extends Controller
             $query->where('text', 'like', '%'.$search.'%');
         }
 
-        $questions = $query->latest()->paginate($request->input('per_page', 15));
+        $questions = $query->latest()->paginate(min((int) $request->input('per_page', 15), 100));
 
         return QuestionResource::collection($questions);
     }
