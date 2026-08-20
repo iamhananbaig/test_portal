@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import { Clock, BookOpen, AlertTriangle, ArrowLeft, Play } from 'lucide-react'
 import { candidateApi } from '../../services/api'
 import Button from '../../components/ui/Button'
+import ThemeToggle from '../../components/ThemeToggle'
 import Skeleton from '../../components/ui/Skeleton'
 import Table, { TableRow, TableCell } from '../../components/ui/Table'
 
@@ -222,6 +223,7 @@ export default function CandidateInstructions() {
           </div>
         </div>
       </div>
+      <ThemeToggle />
     </div>
   )
 }

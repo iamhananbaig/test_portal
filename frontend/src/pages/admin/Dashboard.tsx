@@ -23,10 +23,10 @@ interface DashboardStats {
 }
 
 const statCards = [
-  { key: 'total_questions', label: 'Total Questions', icon: HelpCircle, color: 'text-primary-600', bg: 'bg-primary-50' },
-  { key: 'total_categories', label: 'Categories', icon: FolderOpen, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { key: 'total_tests', label: 'Total Tests', icon: FileText, color: 'text-violet-600', bg: 'bg-violet-50' },
-  { key: 'pending_marking', label: 'Pending Marking', icon: PenLine, color: 'text-amber-600', bg: 'bg-amber-50' },
+  { key: 'total_questions', label: 'Total Questions', icon: HelpCircle, color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-50 dark:bg-primary-900/20' },
+  { key: 'total_categories', label: 'Categories', icon: FolderOpen, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+  { key: 'total_tests', label: 'Total Tests', icon: FileText, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-900/20' },
+  { key: 'pending_marking', label: 'Pending Marking', icon: PenLine, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20' },
 ] as const
 
 export default function Dashboard() {

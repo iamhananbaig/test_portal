@@ -82,15 +82,24 @@ export default function AdminLayout() {
         </nav>
         <div className="border-t border-slate-100 dark:border-slate-700 px-4 py-3">
           <div className="mb-1.5 truncate text-xs font-medium text-slate-900 dark:text-white">{user?.name}</div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2 text-slate-500 dark:text-slate-400"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1 justify-start gap-2 text-slate-500 dark:text-slate-400"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Logout
+            </Button>
+            <button
+              onClick={toggle}
+              className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
       </aside>
 

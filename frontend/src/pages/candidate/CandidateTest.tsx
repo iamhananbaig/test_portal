@@ -474,7 +474,7 @@ export default function CandidateTest() {
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
-                <span className="bg-primary-50 text-primary-700 text-[11px] font-medium px-2 py-0.5 rounded-full">
+                <span className="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 text-[11px] font-medium px-2 py-0.5 rounded-full">
                   {currentQuestion.category}
                 </span>
                 <span className="text-sm text-slate-500 dark:text-slate-400">

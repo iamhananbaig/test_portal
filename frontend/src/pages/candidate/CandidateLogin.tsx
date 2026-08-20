@@ -6,6 +6,7 @@ import { LogIn } from 'lucide-react'
 import { candidateApi } from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
+import ThemeToggle from '../../components/ThemeToggle'
 import { candidateLoginSchema } from '../../lib/validations'
 
 export default function CandidateLogin() {
@@ -83,6 +84,7 @@ export default function CandidateLogin() {
           Contact your administrator if you don&apos;t have a Test ID
         </p>
       </div>
+      <ThemeToggle />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router'
 import { CheckCircle } from 'lucide-react'
 import Button from '../../components/ui/Button'
+import ThemeToggle from '../../components/ThemeToggle'
 
 export default function CandidateComplete() {
   const { testId } = useParams<{ testId: string }>()
@@ -30,6 +31,7 @@ export default function CandidateComplete() {
           Return to Login
         </Button>
       </div>
+      <ThemeToggle />
     </div>
   )
 }

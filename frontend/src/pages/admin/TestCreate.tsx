@@ -226,9 +226,9 @@ export default function TestCreate() {
             <p className="text-sm text-slate-500 dark:text-slate-400">Candidate</p>
             <p className="font-semibold text-slate-900 dark:text-slate-100">{watch('candidate_name')}</p>
           </div>
-          <div className="rounded-lg bg-primary-50 p-4 text-center">
+          <div className="rounded-lg bg-primary-50 dark:bg-primary-900/20 p-4 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">Test ID</p>
-            <p className="text-2xl font-bold tracking-wider text-primary-700">
+            <p className="text-2xl font-bold tracking-wider text-primary-700 dark:text-primary-400">
               {generatedTestId}
             </p>
           </div>
