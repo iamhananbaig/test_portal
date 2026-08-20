@@ -1,0 +1,46 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "instructions": ["AGENTS.md"],
+
+  "mcp": {
+    "laravel-boost": {
+      "type": "local",
+      "enabled": true,
+      "command": ["php", "artisan", "boost:mcp"],
+      "cwd": "api"
+    }
+  },
+
+  "lsp": true,
+
+  "watcher": {
+    "ignore": [
+      "vendor/**",
+      "node_modules/**",
+      ".git/**",
+      "storage/**",
+      "bootstrap/cache/**"
+    ]
+  },
+
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "composer *": "allow",
+      "npm *": "allow",
+      "php artisan *": "allow",
+      "vendor/bin/pint *": "allow",
+      "git status*": "allow",
+      "git log*": "allow",
+      "git diff*": "allow",
+      "git add*": "allow",
+      "rm -rf *": "deny"
+    },
+
+    "edit": {
+      "*.env": "deny",
+      "*.env.*": "deny"
+    }
+  }
+}
