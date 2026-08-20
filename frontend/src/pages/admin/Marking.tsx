@@ -9,7 +9,7 @@ import Pagination from '../../components/ui/Pagination'
 import Spinner from '../../components/ui/Spinner'
 import EmptyState from '../../components/ui/EmptyState'
 import PageHeader from '../../components/ui/PageHeader'
-import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
 import { formatDateTime } from '../../utils/dates'
 
 interface Test {
@@ -101,7 +101,7 @@ export default function Marking() {
                       {test.submitted_at ? formatDateTime(test.submitted_at) : '—'}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="warning">Pending Review</Badge>
+                      <StatusBadge status={test.status} />
                     </TableCell>
                     <TableCell className="text-right">
                       <Button size="sm" onClick={() => navigate(`/admin/marking/${test.id}`)}>
