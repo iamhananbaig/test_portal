@@ -6,6 +6,7 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import Badge from '../../components/ui/Badge'
 import Card, { CardContent } from '../../components/ui/Card'
+import { useDebounce } from '../../hooks/useDebounce'
 
 interface Test {
   id: number
@@ -36,13 +37,14 @@ export default function TestList() {
   const [filters, setFilters] = useState({ status: '', search: '' })
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const debouncedSearch = useDebounce(filters.search, 300)
 
   const fetchTests = async () => {
     setLoading(true)
     try {
       const params: Record<string, string | number> = { page }
       if (filters.status) params.status = filters.status
-      if (filters.search) params.search = filters.search
+      if (debouncedSearch) params.search = debouncedSearch
 
       const response = await api.get('/tests', { params })
       setTests(response.data.data)
@@ -54,7 +56,7 @@ export default function TestList() {
 
   useEffect(() => {
     fetchTests()
-  }, [filters, page])
+  }, [filters.status, debouncedSearch, page])
 
   const formatStatus = (status: string) => {
     return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())

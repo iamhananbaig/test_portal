@@ -18,6 +18,7 @@ import CandidateLogin from './pages/candidate/CandidateLogin'
 import CandidateInstructions from './pages/candidate/CandidateInstructions'
 import CandidateTest from './pages/candidate/CandidateTest'
 import CandidateComplete from './pages/candidate/CandidateComplete'
+import NotFound from './pages/NotFound'
 
 export default function App() {
   return (
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="/candidate/:testId/instructions" element={<CandidateInstructions />} />
         <Route path="/candidate/:testId/test" element={<CandidateTest />} />
         <Route path="/candidate/:testId/complete" element={<CandidateComplete />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>
   )

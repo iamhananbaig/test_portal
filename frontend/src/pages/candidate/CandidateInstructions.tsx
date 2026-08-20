@@ -30,21 +30,31 @@ export default function CandidateInstructions() {
       headers: { Accept: 'application/json' },
     })
       .then((res) => {
+        if (res.status === 408) {
+          navigate(`/candidate/${testId}/complete`)
+          return null
+        }
         if (!res.ok) throw new Error('Failed to load instructions')
         return res.json()
       })
-      .then(setData)
+      .then((data) => { if (data) setData(data) })
       .catch(() => setError('Failed to load test instructions'))
       .finally(() => setLoading(false))
-  }, [testId])
+  }, [testId, navigate])
 
   const handleStart = async () => {
     setStarting(true)
+    setError('')
     try {
       const res = await fetch(`/api/candidate/${testId}/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       })
+
+      if (res.status === 408) {
+        navigate(`/candidate/${testId}/complete`)
+        return
+      }
 
       if (!res.ok) {
         const body = await res.json()

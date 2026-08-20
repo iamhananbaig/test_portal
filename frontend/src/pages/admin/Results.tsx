@@ -6,6 +6,7 @@ import Select from '../../components/ui/Select'
 import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 import Card, { CardContent } from '../../components/ui/Card'
+import { useDebounce } from '../../hooks/useDebounce'
 
 interface Result {
   id: number
@@ -34,13 +35,14 @@ export default function Results() {
   const [filters, setFilters] = useState({ status: '', search: '' })
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const debouncedSearch = useDebounce(filters.search, 300)
 
   const fetchResults = async () => {
     setLoading(true)
     try {
       const params: Record<string, string | number> = { page }
       if (filters.status) params.status = filters.status
-      if (filters.search) params.search = filters.search
+      if (debouncedSearch) params.search = debouncedSearch
 
       const response = await api.get('/results', { params })
       setResults(response.data.data)
@@ -52,7 +54,7 @@ export default function Results() {
 
   useEffect(() => {
     fetchResults()
-  }, [filters, page])
+  }, [filters.status, debouncedSearch, page])
 
   const formatStatus = (status: string) => {
     return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())

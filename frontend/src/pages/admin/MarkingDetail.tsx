@@ -67,10 +67,13 @@ export default function MarkingDetail() {
     try {
       const marksPayload = questions
         .filter((q) => marks[q.question_id] !== '')
-        .map((q) => ({
-          question_id: q.question_id,
-          awarded_marks: parseFloat(marks[q.question_id]),
-        }))
+        .map((q) => {
+          const parsed = parseFloat(marks[q.question_id])
+          return {
+            question_id: q.question_id,
+            awarded_marks: isNaN(parsed) ? 0 : Math.min(Math.max(parsed, 0), q.max_marks),
+          }
+        })
 
       if (marksPayload.length === 0) {
         setMessage({ type: 'error', text: 'Please enter marks for at least one question.' })
@@ -89,6 +92,8 @@ export default function MarkingDetail() {
   }
 
   const handleFinalize = async () => {
+    if (!window.confirm('Are you sure? This action cannot be undone. All marks will be finalized.')) return
+
     setFinalizing(true)
     setMessage(null)
     try {

@@ -57,7 +57,7 @@ export default function Dashboard() {
     <div>
       <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
 
-      <div className="mt-6 grid grid-cols-4 gap-4">
+      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent>
             <p className="text-sm text-gray-500">Total Questions</p>

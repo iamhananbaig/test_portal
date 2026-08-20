@@ -6,6 +6,7 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import Badge from '../../components/ui/Badge'
 import Card, { CardContent } from '../../components/ui/Card'
+import { useDebounce } from '../../hooks/useDebounce'
 
 interface Category {
   id: number
@@ -35,6 +36,7 @@ export default function QuestionBank() {
   })
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const debouncedSearch = useDebounce(filters.search, 300)
 
   const fetchQuestions = async () => {
     setLoading(true)
@@ -43,7 +45,7 @@ export default function QuestionBank() {
       if (filters.category_id) params.category_id = filters.category_id
       if (filters.type) params.type = filters.type
       if (filters.is_active) params.is_active = filters.is_active
-      if (filters.search) params.search = filters.search
+      if (debouncedSearch) params.search = debouncedSearch
 
       const response = await api.get('/questions', { params })
       setQuestions(response.data.data)
@@ -64,7 +66,7 @@ export default function QuestionBank() {
 
   useEffect(() => {
     fetchQuestions()
-  }, [filters, page])
+  }, [filters.category_id, filters.type, filters.is_active, debouncedSearch, page])
 
   const toggleStatus = async (q: Question) => {
     await api.put(`/questions/${q.id}/status`)

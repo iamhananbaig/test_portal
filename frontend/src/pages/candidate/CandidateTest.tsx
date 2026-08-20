@@ -87,8 +87,34 @@ export default function CandidateTest() {
   }, [loadQuestions])
 
   useEffect(() => {
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [])
+
+  useEffect(() => {
     if (remainingSeconds <= 0 && !loading && data) {
-      navigate(`/candidate/${testId}/complete`)
+      const submitOnExpiry = async () => {
+        try {
+          await fetch(`/api/candidate/${testId}/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          })
+        } catch { /* server may have already auto-submitted */ }
+        navigate(`/candidate/${testId}/complete`)
+      }
+      submitOnExpiry()
       return
     }
 
@@ -105,7 +131,7 @@ export default function CandidateTest() {
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current)
     }
-  }, [loading, data, testId, navigate, remainingSeconds > 0])
+  }, [loading, data, testId, navigate])
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600)
@@ -218,6 +244,7 @@ export default function CandidateTest() {
       })
 
       if (res.ok) {
+        localStorage.removeItem(`test_${testId}_index`)
         navigate(`/candidate/${testId}/complete`)
       } else {
         const body = await res.json()
@@ -317,7 +344,7 @@ export default function CandidateTest() {
                     {i + 1}
                   </span>
                   <span className="truncate flex-1 text-left">
-                    {q.text.substring(0, 25)}{q.text.length > 25 ? '...' : ''}
+                    {q.text.substring(0, 50)}{q.text.length > 50 ? '...' : ''}
                   </span>
                   {q.is_flagged && (
                     <span className="text-amber-500">⚑</span>
