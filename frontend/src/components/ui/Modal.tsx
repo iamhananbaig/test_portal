@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 interface ModalProps {
@@ -40,7 +41,7 @@ export default function Modal({ open, onClose, title, size = 'md', children, foo
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
@@ -48,15 +49,15 @@ export default function Modal({ open, onClose, title, size = 'md', children, foo
       aria-labelledby={title ? 'modal-title' : undefined}
     >
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
       <div
-        className={`relative w-full ${sizeClasses[size]} rounded-xl bg-white shadow-xl transition-all`}
+        className={`relative w-full ${sizeClasses[size]} rounded-xl bg-white dark:bg-slate-800 shadow-xl transition-all`}
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 px-6 py-4">
           {title ? (
-            <h2 id="modal-title" className="text-base font-semibold text-slate-900">
+            <h2 id="modal-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
               {title}
             </h2>
           ) : (
@@ -65,18 +66,19 @@ export default function Modal({ open, onClose, title, size = 'md', children, foo
           <button
             ref={closeRef}
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="rounded-lg p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="px-6 py-4">{children}</div>
         {footer && (
-          <div className="border-t border-slate-100 px-6 py-4 flex justify-end gap-2">
+          <div className="border-t border-slate-100 dark:border-slate-700 px-6 py-4 flex justify-end gap-2">
             {footer}
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
