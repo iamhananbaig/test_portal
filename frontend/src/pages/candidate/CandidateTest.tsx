@@ -84,7 +84,8 @@ export default function CandidateTest() {
           setCurrentIndex(idx)
         }
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
       setError('Network error loading questions')
     } finally {
       setLoading(false)
