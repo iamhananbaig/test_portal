@@ -1,5 +1,7 @@
 import { Routes, Route } from 'react-router'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import RequireAuth from './components/RequireAuth'
 import GuestRoute from './components/GuestRoute'
@@ -21,46 +23,59 @@ import CandidateTest from './pages/candidate/CandidateTest'
 import CandidateComplete from './pages/candidate/CandidateComplete'
 import NotFound from './pages/NotFound'
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+    },
+  },
+})
+
 export default function App() {
   return (
-    <AuthProvider>
-      <ErrorBoundary>
-      <Routes>
-        <Route
-          path="/admin/login"
-          element={
-            <GuestRoute>
-              <Login />
-            </GuestRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth>
-              <AdminLayout />
-            </RequireAuth>
-          }
-        >
-          <Route index element={<Dashboard />} />
-          <Route path="categories" element={<Categories />} />
-          <Route path="questions" element={<QuestionBank />} />
-          <Route path="questions/new" element={<QuestionForm />} />
-          <Route path="questions/:id/edit" element={<QuestionForm />} />
-          <Route path="tests" element={<TestList />} />
-          <Route path="tests/new" element={<TestCreate />} />
-          <Route path="marking" element={<Marking />} />
-          <Route path="marking/:id" element={<MarkingDetail />} />
-          <Route path="results" element={<Results />} />
-          <Route path="results/:id" element={<ResultDetail />} />
-        </Route>
-        <Route path="/candidate" element={<CandidateLogin />} />
-        <Route path="/candidate/:testId/instructions" element={<CandidateInstructions />} />
-        <Route path="/candidate/:testId/test" element={<CandidateTest />} />
-        <Route path="/candidate/:testId/complete" element={<CandidateComplete />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      </ErrorBoundary>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <ErrorBoundary>
+            <Routes>
+              <Route
+                path="/admin/login"
+                element={
+                  <GuestRoute>
+                    <Login />
+                  </GuestRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <RequireAuth>
+                    <AdminLayout />
+                  </RequireAuth>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="categories" element={<Categories />} />
+                <Route path="questions" element={<QuestionBank />} />
+                <Route path="questions/new" element={<QuestionForm />} />
+                <Route path="questions/:id/edit" element={<QuestionForm />} />
+                <Route path="tests" element={<TestList />} />
+                <Route path="tests/new" element={<TestCreate />} />
+                <Route path="marking" element={<Marking />} />
+                <Route path="marking/:id" element={<MarkingDetail />} />
+                <Route path="results" element={<Results />} />
+                <Route path="results/:id" element={<ResultDetail />} />
+              </Route>
+              <Route path="/candidate" element={<CandidateLogin />} />
+              <Route path="/candidate/:testId/instructions" element={<CandidateInstructions />} />
+              <Route path="/candidate/:testId/test" element={<CandidateTest />} />
+              <Route path="/candidate/:testId/complete" element={<CandidateComplete />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   )
 }
