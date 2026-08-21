@@ -72,6 +72,7 @@ export default function QuestionForm() {
     },
   })
 
+  const watchCategoryId = useWatch({ control, name: 'category_id' })
   const watchType = useWatch({ control, name: 'type' })
 
   const optionImagePreviews = useMemo(() => {
@@ -297,15 +298,19 @@ export default function QuestionForm() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
+              name="category_id"
               label="Category"
-              {...register('category_id')}
+              value={watchCategoryId}
+              onChange={(e) => setValue('category_id', e.target.value, { shouldValidate: true })}
               error={errors.category_id?.message}
               options={categories.map((c) => ({ value: String(c.id), label: c.name }))}
               placeholder="Select category"
             />
             <Select
+              name="type"
               label="Type"
-              {...register('type')}
+              value={watchType}
+              onChange={(e) => setValue('type', e.target.value, { shouldValidate: true })}
               error={errors.type?.message}
               options={[
                 { value: 'mcq', label: 'MCQ' },

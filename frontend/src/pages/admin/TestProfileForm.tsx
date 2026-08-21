@@ -55,7 +55,7 @@ export default function TestProfileForm() {
     enabled: isEdit,
   })
 
-  const { register, control, handleSubmit, formState: { errors }, reset } = useForm<ProfileForm>({
+  const { register, control, handleSubmit, setValue, formState: { errors }, reset } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
@@ -105,8 +105,11 @@ export default function TestProfileForm() {
     },
   })
 
-  const usedCategories = watchedCategories.map((cat) => cat.category_id).filter(Boolean)
-  const availableCategories = (categories ?? []).filter((cat) => !usedCategories.includes(String(cat.id)) || isEdit)
+  const availableCategories = (excludeIndex: number) =>
+    (categories ?? []).filter((cat) => {
+      const usedInOtherRows = watchedCategories.some((row, i) => i !== excludeIndex && row.category_id === String(cat.id))
+      return !usedInOtherRows || isEdit
+    })
 
   if (isEdit && profileLoading) {
     return (
@@ -158,14 +161,12 @@ export default function TestProfileForm() {
                   <div key={field.id} className="flex items-end gap-3">
                     <div className="flex-1">
                       <Select
+                        name={`categories.${index}.category_id`}
                         placeholder="Select category"
                         error={errors.categories?.[index]?.category_id?.message}
                         value={watchedCategories[index]?.category_id ?? ''}
-                        onChange={(e) => {
-                          const event = { target: { value: e.target.value, name: `categories.${index}.category_id` } }
-                          register(`categories.${index}.category_id`).onChange(event)
-                        }}
-                        options={availableCategories.map((cat) => ({
+                        onChange={(e) => setValue(`categories.${index}.category_id`, e.target.value, { shouldValidate: true })}
+                        options={availableCategories(index).map((cat) => ({
                           value: String(cat.id),
                           label: cat.name,
                         }))}

@@ -78,6 +78,7 @@ export default function TestList() {
         <CardContent>
           <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select
+              name="status"
               label="Status"
               value={filters.status}
               onChange={(e) => updateFilter('status', e.target.value)}

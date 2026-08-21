@@ -66,11 +66,11 @@ export default function Categories() {
   })
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, is_active }: { id: number; is_active: boolean }) =>
-      api.put(`/categories/${id}`, { is_active }),
-    onSuccess: (_, vars) => {
+    mutationFn: ({ id }: { id: number }) =>
+      api.put(`/categories/${id}/status`),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
-      success(`Category ${vars.is_active ? 'deactivated' : 'activated'}.`)
+      success('Category status updated.')
     },
   })
 
@@ -150,7 +150,7 @@ export default function Categories() {
                       <Button variant="ghost" size="sm" onClick={() => openEdit(cat)}>
                         Edit
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => toggleMutation.mutate({ id: cat.id, is_active: cat.is_active })}>
+                      <Button variant="ghost" size="sm" onClick={() => toggleMutation.mutate({ id: cat.id })}>
                         {cat.is_active ? 'Deactivate' : 'Activate'}
                       </Button>
                     </div>

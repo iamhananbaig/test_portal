@@ -103,6 +103,7 @@ export default function QuestionBank() {
         <CardContent>
           <div className="mb-4 grid grid-cols-2 md:grid-cols-4 gap-4">
             <Select
+              name="category_id"
               label="Category"
               value={filters.category_id}
               onChange={(e) => updateFilter('category_id', e.target.value)}
@@ -112,6 +113,7 @@ export default function QuestionBank() {
               ]}
             />
             <Select
+              name="type"
               label="Type"
               value={filters.type}
               onChange={(e) => updateFilter('type', e.target.value)}
@@ -122,6 +124,7 @@ export default function QuestionBank() {
               ]}
             />
             <Select
+              name="is_active"
               label="Status"
               value={filters.is_active}
               onChange={(e) => updateFilter('is_active', e.target.value)}
