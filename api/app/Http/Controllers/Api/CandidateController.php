@@ -35,6 +35,12 @@ class CandidateController extends Controller
             return response()->json(['message' => 'This test has expired.', 'status' => 'expired'], 410);
         }
 
+        if ($test->status === 'ready' && now()->greaterThan($test->expires_at)) {
+            $test->update(['status' => 'expired']);
+
+            return response()->json(['message' => 'This test has expired.', 'status' => 'expired'], 410);
+        }
+
         if (in_array($test->status, ['submitted', 'auto_submitted', 'completed'])) {
             return response()->json(['message' => 'This test has already been completed.', 'status' => 'completed'], 409);
         }
@@ -55,7 +61,7 @@ class CandidateController extends Controller
             ->map(fn ($items, $name) => [
                 'category' => $name,
                 'count' => $items->count(),
-                'marks' => $items->sum(fn ($tq) => $tq->question->marks ?? 0),
+                'marks' => $items->sum(fn ($tq) => $tq->question_marks ?? 0),
             ])
             ->values();
 
@@ -73,6 +79,12 @@ class CandidateController extends Controller
     {
         if ($test->status === 'in_progress') {
             return $this->testResponse($test);
+        }
+
+        if ($test->status === 'ready' && now()->greaterThan($test->expires_at)) {
+            $test->update(['status' => 'expired']);
+
+            return response()->json(['message' => 'This test has expired.', 'status' => 'expired'], 410);
         }
 
         if (! in_array($test->status, ['ready'])) {
@@ -102,7 +114,7 @@ class CandidateController extends Controller
         }
 
         $testQuestions = TestQuestion::where('test_id', $test->id)
-            ->with(['question', 'question.options', 'category'])
+            ->with('category')
             ->get();
 
         $answers = CandidateAnswer::where('test_id', $test->id)
@@ -111,21 +123,22 @@ class CandidateController extends Controller
 
         $questions = $testQuestions->map(function ($tq) use ($answers) {
             $answer = $answers->get($tq->question_id);
+            $options = collect($tq->options_snapshot ?? []);
 
             return [
                 'id' => $tq->question_id,
-                'text' => $tq->question->text,
-                'image_path' => $tq->question->image_path,
-                'type' => $tq->question->type,
-                'marks' => $tq->question->marks,
+                'text' => $tq->question_text,
+                'image_path' => $tq->question_image_path,
+                'type' => $tq->question_type,
+                'marks' => $tq->question_marks,
                 'category' => $tq->category->name ?? 'Unknown',
                 'category_id' => $tq->category_id,
                 'display_order' => $tq->display_order,
-                'options' => $tq->question->options->map(fn ($opt) => [
-                    'id' => $opt->id,
-                    'label' => $opt->label,
-                    'text' => $opt->text,
-                    'image_path' => $opt->image_path,
+                'options' => $options->map(fn ($opt) => [
+                    'id' => $opt['id'],
+                    'label' => $opt['label'],
+                    'text' => $opt['text'],
+                    'image_path' => $opt['image_path'] ?? null,
                 ]),
                 'selected_option_id' => $answer?->selected_option_id,
                 'descriptive_answer' => $answer?->descriptive_answer,
@@ -326,17 +339,27 @@ class CandidateController extends Controller
 
             $answers = CandidateAnswer::where('test_id', $test->id)
                 ->whereNotNull('selected_option_id')
-                ->with('question')
                 ->get();
 
-            $correctOptionIds = QuestionOption::where('is_correct', true)
-                ->whereIn('question_id', $answers->pluck('question_id')->unique())
-                ->pluck('id', 'question_id');
+            $testQuestions = TestQuestion::where('test_id', $test->id)
+                ->get()
+                ->keyBy('question_id');
+
+            $correctOptionIds = [];
+            foreach ($testQuestions as $tq) {
+                $options = $tq->options_snapshot ?? [];
+                foreach ($options as $opt) {
+                    if (! empty($opt['is_correct'])) {
+                        $correctOptionIds[$tq->question_id] = $opt['id'];
+                    }
+                }
+            }
 
             $mcqMarks = 0;
             foreach ($answers as $answer) {
-                $isCorrect = $correctOptionIds->get($answer->question_id) === $answer->selected_option_id;
-                $marks = $isCorrect ? ($answer->question->marks ?? 1) : 0;
+                $tq = $testQuestions->get($answer->question_id);
+                $isCorrect = ($correctOptionIds[$answer->question_id] ?? null) === $answer->selected_option_id;
+                $marks = $isCorrect ? ($tq->question_marks ?? 1) : 0;
                 $answer->update(['awarded_marks' => $marks]);
                 $mcqMarks += $marks;
             }
@@ -344,7 +367,7 @@ class CandidateController extends Controller
             $mcqMarks = round($mcqMarks, 2);
 
             $hasDescriptive = TestQuestion::where('test_id', $test->id)
-                ->whereHas('question', fn ($q) => $q->where('type', 'descriptive'))
+                ->where('question_type', 'descriptive')
                 ->exists();
 
             $status = $hasDescriptive ? 'pending_review' : 'completed';

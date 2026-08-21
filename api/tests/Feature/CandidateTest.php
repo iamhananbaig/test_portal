@@ -19,10 +19,23 @@ beforeEach(function () {
 
     $testQuestions = [];
     foreach ($this->questions as $i => $question) {
+        $options = $question->options->map(fn ($opt) => [
+            'id' => $opt->id,
+            'label' => $opt->label,
+            'text' => $opt->text,
+            'image_path' => $opt->image_path,
+            'is_correct' => $opt->is_correct,
+        ])->values()->all();
+
         $testQuestions[] = [
             'question_id' => $question->id,
             'category_id' => $this->category->id,
             'display_order' => $i + 1,
+            'question_text' => $question->text,
+            'question_type' => $question->type,
+            'question_marks' => $question->marks,
+            'question_image_path' => $question->image_path,
+            'options_snapshot' => $options,
         ];
     }
 
@@ -125,6 +138,30 @@ it('rejects starting a submitted test', function () {
         ->assertJsonFragment(['message' => 'Test cannot be started.']);
 });
 
+it('rejects starting a test past the 1-hour validity window', function () {
+    $this->test->update(['expires_at' => now()->subMinute()]);
+
+    $response = $this->postJson('/api/candidate/'.$this->test->test_id.'/start');
+
+    $response->assertStatus(410)
+        ->assertJsonFragment(['status' => 'expired']);
+
+    $this->test->refresh();
+    expect($this->test->status)->toBe('expired');
+});
+
+it('detects expired ready test during validation', function () {
+    $this->test->update(['expires_at' => now()->subMinute()]);
+
+    $response = $this->postJson('/api/candidate/validate', ['test_id' => 'TEST-0001']);
+
+    $response->assertStatus(410)
+        ->assertJsonFragment(['status' => 'expired']);
+
+    $this->test->refresh();
+    expect($this->test->status)->toBe('expired');
+});
+
 it('returns questions for in_progress test', function () {
     $this->test->update(['status' => 'in_progress', 'started_at' => now(), 'expires_at' => now()->addHour()]);
 
@@ -183,6 +220,11 @@ it('saves a descriptive answer', function () {
         'question_id' => $descriptiveQuestion->id,
         'category_id' => $descriptiveCategory->id,
         'display_order' => 4,
+        'question_text' => $descriptiveQuestion->text,
+        'question_type' => 'descriptive',
+        'question_marks' => $descriptiveQuestion->marks,
+        'question_image_path' => null,
+        'options_snapshot' => [],
     ]);
 
     $response = $this->putJson('/api/candidate/'.$this->test->test_id.'/answer', [
@@ -232,6 +274,17 @@ it('submits a test manually', function () {
     $question = $this->questions[0];
     $correctOption = $question->options->first();
     $correctOption->update(['is_correct' => true]);
+
+    // Update the snapshot to reflect the correct option
+    $tq = TestQuestion::where('test_id', $this->test->id)
+        ->where('question_id', $question->id)
+        ->first();
+    $snapshot = collect($tq->options_snapshot)->map(function ($opt) use ($correctOption) {
+        $opt['is_correct'] = $opt['id'] === $correctOption->id;
+
+        return $opt;
+    })->all();
+    $tq->update(['options_snapshot' => $snapshot]);
 
     CandidateAnswer::create([
         'test_id' => $this->test->id,
