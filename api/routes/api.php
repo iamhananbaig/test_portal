@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BulkQuestionController;
 use App\Http\Controllers\Api\CandidateController;
 use App\Http\Controllers\Api\CandidateManagementController;
 use App\Http\Controllers\Api\CategoryController;
@@ -20,6 +21,7 @@ Route::middleware(['auth:api', 'throttle:admin'])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
 
     Route::apiResource('categories', CategoryController::class)->only(['index', 'store', 'update']);
+    Route::put('/categories/{category}/status', [CategoryController::class, 'toggleStatus']);
 
     Route::apiResource('questions', QuestionController::class)->only(['index', 'show', 'store', 'update']);
     Route::put('/questions/{question}/status', [QuestionController::class, 'toggleStatus']);
@@ -27,6 +29,10 @@ Route::middleware(['auth:api', 'throttle:admin'])->group(function () {
     Route::delete('/questions/{question}/image', [QuestionController::class, 'destroyImage']);
     Route::post('/questions/{question}/options/{option}/image', [QuestionController::class, 'uploadOptionImage']);
     Route::delete('/questions/{question}/options/{option}/image', [QuestionController::class, 'destroyOptionImage']);
+
+    Route::get('/questions/sample-download', [BulkQuestionController::class, 'sampleDownload']);
+    Route::post('/questions/validate-upload', [BulkQuestionController::class, 'validate']);
+    Route::post('/questions/bulk-import', [BulkQuestionController::class, 'import']);
 
     Route::apiResource('test-profiles', TestProfileController::class);
 
