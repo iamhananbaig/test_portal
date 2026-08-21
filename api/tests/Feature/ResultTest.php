@@ -105,6 +105,14 @@ it('shows full result detail with questions', function () {
         'question_id' => $question->id,
         'category_id' => $this->category->id,
         'display_order' => 1,
+        'question_text' => $question->text,
+        'question_type' => $question->type,
+        'question_marks' => $question->marks,
+        'question_image_path' => $question->image_path,
+        'options_snapshot' => [
+            ['id' => $correctOption->id, 'label' => 'A', 'text' => '4', 'image_path' => null, 'is_correct' => true],
+            ['id' => $wrongOption->id, 'label' => 'B', 'text' => '5', 'image_path' => null, 'is_correct' => false],
+        ],
     ]);
 
     $test->candidateAnswers()->create([
@@ -142,8 +150,8 @@ it('includes category breakdown', function () {
     $q1 = Question::factory()->create(['category_id' => $this->category->id, 'marks' => 5]);
     $q2 = Question::factory()->create(['category_id' => $cat2->id, 'marks' => 10]);
 
-    TestQuestion::create(['test_id' => $test->id, 'question_id' => $q1->id, 'category_id' => $this->category->id, 'display_order' => 1]);
-    TestQuestion::create(['test_id' => $test->id, 'question_id' => $q2->id, 'category_id' => $cat2->id, 'display_order' => 2]);
+    TestQuestion::create(['test_id' => $test->id, 'question_id' => $q1->id, 'category_id' => $this->category->id, 'display_order' => 1, 'question_text' => $q1->text, 'question_type' => $q1->type, 'question_marks' => $q1->marks, 'question_image_path' => $q1->image_path, 'options_snapshot' => []]);
+    TestQuestion::create(['test_id' => $test->id, 'question_id' => $q2->id, 'category_id' => $cat2->id, 'display_order' => 2, 'question_text' => $q2->text, 'question_type' => $q2->type, 'question_marks' => $q2->marks, 'question_image_path' => $q2->image_path, 'options_snapshot' => []]);
 
     $test->candidateAnswers()->create(['question_id' => $q1->id, 'awarded_marks' => 4]);
     $test->candidateAnswers()->create(['question_id' => $q2->id, 'awarded_marks' => 8]);

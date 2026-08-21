@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\CandidateAnswer;
-use App\Models\QuestionOption;
 use App\Models\Test;
+use App\Models\TestQuestion;
 use Illuminate\Console\Command;
 
 class RecalculateMcqMarks extends Command
@@ -41,7 +41,6 @@ class RecalculateMcqMarks extends Command
         foreach ($tests as $test) {
             $mcqAnswers = CandidateAnswer::where('test_id', $test->id)
                 ->whereNotNull('selected_option_id')
-                ->with('question')
                 ->get();
 
             if ($mcqAnswers->isEmpty()) {
@@ -51,17 +50,27 @@ class RecalculateMcqMarks extends Command
                 continue;
             }
 
-            $questionIds = $mcqAnswers->pluck('question_id')->unique();
-            $correctOptionIds = QuestionOption::where('is_correct', true)
-                ->whereIn('question_id', $questionIds)
-                ->pluck('id', 'question_id');
+            $testQuestions = TestQuestion::where('test_id', $test->id)
+                ->get()
+                ->keyBy('question_id');
+
+            $correctOptionIds = [];
+            foreach ($testQuestions as $tq) {
+                $options = $tq->options_snapshot ?? [];
+                foreach ($options as $opt) {
+                    if (! empty($opt['is_correct'])) {
+                        $correctOptionIds[$tq->question_id] = $opt['id'];
+                    }
+                }
+            }
 
             $mcqMarks = 0;
             $answersToUpdate = 0;
 
             foreach ($mcqAnswers as $answer) {
-                $isCorrect = $correctOptionIds->get($answer->question_id) === $answer->selected_option_id;
-                $marks = $isCorrect ? ($answer->question->marks ?? 1) : 0;
+                $tq = $testQuestions->get($answer->question_id);
+                $isCorrect = ($correctOptionIds[$answer->question_id] ?? null) === $answer->selected_option_id;
+                $marks = $isCorrect ? ($tq->question_marks ?? 1) : 0;
                 $mcqMarks += $marks;
 
                 if ($answer->awarded_marks === null || (float) $answer->awarded_marks !== (float) $marks) {

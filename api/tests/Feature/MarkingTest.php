@@ -32,11 +32,25 @@ beforeEach(function () {
 
     $order = 1;
     foreach (array_merge($this->mcqQuestions->toArray(), $this->descriptiveQuestions->toArray()) as $question) {
+        $q = Question::find($question['id']);
+        $options = $q->options->map(fn ($opt) => [
+            'id' => $opt->id,
+            'label' => $opt->label,
+            'text' => $opt->text,
+            'image_path' => $opt->image_path,
+            'is_correct' => $opt->is_correct,
+        ])->values()->all();
+
         TestQuestion::create([
             'test_id' => $this->test->id,
             'question_id' => $question['id'],
             'category_id' => $this->category->id,
             'display_order' => $order++,
+            'question_text' => $question['text'],
+            'question_type' => $question['type'],
+            'question_marks' => $question['marks'],
+            'question_image_path' => $question['image_path'] ?? null,
+            'options_snapshot' => $options,
         ]);
     }
 

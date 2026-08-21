@@ -13,8 +13,8 @@ class MarkingService
     public function getDescriptiveQuestions(Test $test): array
     {
         $testQuestions = TestQuestion::where('test_id', $test->id)
-            ->whereHas('question', fn ($q) => $q->where('type', 'descriptive'))
-            ->with(['question', 'category'])
+            ->where('question_type', 'descriptive')
+            ->with('category')
             ->get();
 
         $answers = CandidateAnswer::where('test_id', $test->id)
@@ -27,8 +27,8 @@ class MarkingService
 
             return [
                 'question_id' => $tq->question_id,
-                'text' => $tq->question->text,
-                'max_marks' => $tq->question->marks,
+                'text' => $tq->question_text,
+                'max_marks' => $tq->question_marks,
                 'category' => $tq->category->name ?? 'Unknown',
                 'display_order' => $tq->display_order,
                 'descriptive_answer' => $answer?->descriptive_answer,
@@ -47,10 +47,10 @@ class MarkingService
 
                 $testQuestion = TestQuestion::where('test_id', $test->id)
                     ->where('question_id', $questionId)
-                    ->whereHas('question', fn ($q) => $q->where('type', 'descriptive'))
+                    ->where('question_type', 'descriptive')
                     ->firstOrFail();
 
-                $maxMarks = (float) $testQuestion->question->marks;
+                $maxMarks = (float) $testQuestion->question_marks;
                 if ($awardedMarks < 0 || $awardedMarks > $maxMarks) {
                     throw new \InvalidArgumentException(
                         "Awarded marks must be between 0 and {$maxMarks} for question {$questionId}."
@@ -75,7 +75,7 @@ class MarkingService
         }
 
         $descriptiveQuestions = TestQuestion::where('test_id', $test->id)
-            ->whereHas('question', fn ($q) => $q->where('type', 'descriptive'))
+            ->where('question_type', 'descriptive')
             ->pluck('question_id');
 
         if ($descriptiveQuestions->isNotEmpty()) {
@@ -109,7 +109,7 @@ class MarkingService
     private function calculateDescriptiveMarks(Test $test): float
     {
         $descriptiveQuestions = TestQuestion::where('test_id', $test->id)
-            ->whereHas('question', fn ($q) => $q->where('type', 'descriptive'))
+            ->where('question_type', 'descriptive')
             ->pluck('question_id');
 
         return (float) CandidateAnswer::where('test_id', $test->id)

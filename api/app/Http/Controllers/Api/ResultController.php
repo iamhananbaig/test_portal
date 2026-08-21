@@ -40,29 +40,26 @@ class ResultController extends Controller
     {
         $test->load([
             'result',
-            'test_questions' => fn ($q) => $q->with([
-                'question' => fn ($q) => $q->with(['category', 'options']),
-                'category',
-            ])->orderBy('display_order'),
+            'test_questions' => fn ($q) => $q->orderBy('display_order'),
             'candidateAnswers' => fn ($q) => $q->with('selectedOption'),
         ]);
 
         $questions = $test->test_questions->map(function ($tq) use ($test) {
             $answer = $test->candidateAnswers->firstWhere('question_id', $tq->question_id);
-            $question = $tq->question;
+            $options = collect($tq->options_snapshot ?? []);
 
             return [
-                'question_id' => $question->id,
-                'text' => $question->text,
-                'type' => $question->type,
-                'marks' => (float) $question->marks,
+                'question_id' => $tq->question_id,
+                'text' => $tq->question_text,
+                'type' => $tq->question_type,
+                'marks' => (float) $tq->question_marks,
                 'category' => $tq->category->name,
                 'display_order' => $tq->display_order,
-                'options' => $question->options->map(fn ($opt) => [
-                    'id' => $opt->id,
-                    'label' => $opt->label,
-                    'text' => $opt->text,
-                    'is_correct' => $opt->is_correct,
+                'options' => $options->map(fn ($opt) => [
+                    'id' => $opt['id'],
+                    'label' => $opt['label'],
+                    'text' => $opt['text'],
+                    'is_correct' => $opt['is_correct'] ?? false,
                 ]),
                 'selected_option_id' => $answer?->selected_option_id,
                 'descriptive_answer' => $answer?->descriptive_answer,
@@ -74,7 +71,7 @@ class ResultController extends Controller
         $categoryBreakdown = $test->test_questions
             ->groupBy(fn ($tq) => $tq->category->name)
             ->map(function ($questions, $categoryName) use ($test) {
-                $totalMarks = $questions->sum(fn ($tq) => (float) $tq->question->marks);
+                $totalMarks = $questions->sum(fn ($tq) => (float) $tq->question_marks);
                 $obtainedMarks = 0;
 
                 foreach ($questions as $tq) {

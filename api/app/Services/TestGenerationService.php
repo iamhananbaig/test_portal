@@ -31,6 +31,7 @@ class TestGenerationService
             $count = $config['count'];
 
             $questions = Question::query()
+                ->with('options')
                 ->where('category_id', $categoryId)
                 ->where('is_active', true)
                 ->inRandomOrder()
@@ -52,6 +53,17 @@ class TestGenerationService
                     'question_id' => $question->id,
                     'category_id' => $categoryId,
                     'display_order' => $orderCounters[$categoryId],
+                    'question_text' => $question->text,
+                    'question_type' => $question->type,
+                    'question_marks' => $question->marks,
+                    'question_image_path' => $question->image_path,
+                    'options_snapshot' => $question->options->map(fn ($opt) => [
+                        'id' => $opt->id,
+                        'label' => $opt->label,
+                        'text' => $opt->text,
+                        'image_path' => $opt->image_path,
+                        'is_correct' => $opt->is_correct,
+                    ])->values()->all(),
                 ];
             }
         }
