@@ -23,16 +23,16 @@ Route::middleware(['auth:api', 'throttle:admin'])->group(function () {
     Route::apiResource('categories', CategoryController::class)->only(['index', 'store', 'update']);
     Route::put('/categories/{category}/status', [CategoryController::class, 'toggleStatus']);
 
+    Route::get('/questions/sample-download', [BulkQuestionController::class, 'sampleDownload']);
+    Route::post('/questions/validate-upload', [BulkQuestionController::class, 'validate']);
+    Route::post('/questions/bulk-import', [BulkQuestionController::class, 'import']);
+
     Route::apiResource('questions', QuestionController::class)->only(['index', 'show', 'store', 'update']);
     Route::put('/questions/{question}/status', [QuestionController::class, 'toggleStatus']);
     Route::post('/questions/{question}/image', [QuestionController::class, 'uploadImage']);
     Route::delete('/questions/{question}/image', [QuestionController::class, 'destroyImage']);
     Route::post('/questions/{question}/options/{option}/image', [QuestionController::class, 'uploadOptionImage']);
     Route::delete('/questions/{question}/options/{option}/image', [QuestionController::class, 'destroyOptionImage']);
-
-    Route::get('/questions/sample-download', [BulkQuestionController::class, 'sampleDownload']);
-    Route::post('/questions/validate-upload', [BulkQuestionController::class, 'validate']);
-    Route::post('/questions/bulk-import', [BulkQuestionController::class, 'import']);
 
     Route::apiResource('test-profiles', TestProfileController::class);
 

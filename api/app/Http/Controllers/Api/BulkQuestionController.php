@@ -7,47 +7,50 @@ use App\Models\Category;
 use App\Models\Question;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\StreamedResponse;
 use Illuminate\Support\Facades\DB;
-use OpenSpout\Reader\Common\Creator\ReaderEntityFactory;
-use OpenSpout\Writer\Common\Creator\WriterEntityFactory;
+use OpenSpout\Common\Entity\Cell;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Reader\CSV\Reader as CsvReader;
+use OpenSpout\Reader\XLSX\Reader as XlsxReader;
+use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BulkQuestionController extends Controller
 {
     public function sampleDownload(): StreamedResponse
     {
         return response()->streamDownload(function () {
-            $writer = WriterEntityFactory::createXLSXWriter();
-            $writer->openToPhpTemp();
+            $writer = new XlsxWriter;
+            $tempPath = tempnam(sys_get_temp_dir(), 'bulk_upload_');
+            $writer->openToFile($tempPath);
 
-            $header = WriterEntityFactory::createRow([
-                WriterEntityFactory::createCell('Category'),
-                WriterEntityFactory::createCell('Question'),
-                WriterEntityFactory::createCell('Option A'),
-                WriterEntityFactory::createCell('Option B'),
-                WriterEntityFactory::createCell('Option C'),
-                WriterEntityFactory::createCell('Option D'),
-                WriterEntityFactory::createCell('Correct Answer'),
-                WriterEntityFactory::createCell('Marks'),
+            $header = new Row([
+                Cell::fromValue('Category'),
+                Cell::fromValue('Question'),
+                Cell::fromValue('Option A'),
+                Cell::fromValue('Option B'),
+                Cell::fromValue('Option C'),
+                Cell::fromValue('Option D'),
+                Cell::fromValue('Correct Answer'),
+                Cell::fromValue('Marks'),
             ]);
             $writer->addRow($header);
 
-            $example = WriterEntityFactory::createRow([
-                WriterEntityFactory::createCell('IQ MCQs'),
-                WriterEntityFactory::createCell('What is 2+2?'),
-                WriterEntityFactory::createCell('3'),
-                WriterEntityFactory::createCell('4'),
-                WriterEntityFactory::createCell('5'),
-                WriterEntityFactory::createCell('6'),
-                WriterEntityFactory::createCell('B'),
-                WriterEntityFactory::createCell(1),
+            $example = new Row([
+                Cell::fromValue('IQ MCQs'),
+                Cell::fromValue('What is 2+2?'),
+                Cell::fromValue('3'),
+                Cell::fromValue('4'),
+                Cell::fromValue('5'),
+                Cell::fromValue('6'),
+                Cell::fromValue('B'),
+                Cell::fromValue(1),
             ]);
             $writer->addRow($example);
 
             $writer->close();
-            $tempUri = $writer->getTempFileUri();
-            readfile($tempUri);
-            unlink($tempUri);
+            readfile($tempPath);
+            unlink($tempPath);
         }, 'sample-mcq-upload.xlsx', [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
@@ -61,6 +64,7 @@ class BulkQuestionController extends Controller
 
         $file = $request->file('file');
         $reader = $this->getReader($file);
+        $reader->open($file->getRealPath());
         $rows = [];
 
         foreach ($reader->getSheetIterator() as $sheet) {
@@ -71,8 +75,7 @@ class BulkQuestionController extends Controller
                     continue; // skip header
                 }
 
-                $cells = $row->getCells();
-                $rowData = array_map(fn ($cell) => $cell->getValue(), $cells);
+                $rowData = array_map(fn ($cell) => $cell->getValue(), $row->cells);
 
                 $rows[] = $this->validateRow($rowData, $rowIndex);
             }
@@ -153,15 +156,15 @@ class BulkQuestionController extends Controller
         ]);
     }
 
-    private function getReader($file): ReaderEntityFactory
+    private function getReader($file): XlsxReader|CsvReader
     {
         $extension = strtolower($file->getClientOriginalExtension());
 
         if ($extension === 'csv') {
-            return ReaderEntityFactory::createCSVReader();
+            return new CsvReader;
         }
 
-        return ReaderEntityFactory::createXLSXReader();
+        return new XlsxReader;
     }
 
     private function validateRow(array $rowData, int $rowIndex): array
