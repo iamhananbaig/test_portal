@@ -8,7 +8,7 @@ import { ClipboardCopy, CheckCircle } from 'lucide-react'
 import api from '@/services/api'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import Select from '@/components/ui/Select'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 import Card, { CardContent } from '@/components/ui/Card'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
@@ -183,7 +183,8 @@ export default function TestCreate() {
       .filter((_, i) => i !== excludeIndex)
       .map((r) => r.category_id)
       .filter(Boolean)
-    return categories.filter((c) => !usedIds.includes(String(c.id)))
+    const filtered = categories.filter((c) => !usedIds.includes(String(c.id)))
+    return filtered
   }
 
   return (
@@ -199,15 +200,17 @@ export default function TestCreate() {
           <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Test Profile
           </h2>
-          <Select
+          <SearchableSelect
+            name="test_profile_id"
             placeholder="Select a profile (optional)"
             value={selectedProfileId}
-            onChange={(e) => handleProfileChange(e.target.value)}
+            onChange={(val) => handleProfileChange(String(val))}
             options={[
               { value: '', label: 'Manual Configuration' },
               ...profiles.map((p) => ({
                 value: String(p.id),
                 label: `${p.name} (${p.duration_minutes} min, ${p.categories.reduce((s, c) => s + c.question_count, 0)} questions)`,
+                searchTerms: p.name,
               })),
             ]}
           />
@@ -216,15 +219,17 @@ export default function TestCreate() {
             Candidate Information
           </h2>
           <div className="space-y-4">
-            <Select
+            <SearchableSelect
+              name="candidate_id"
               placeholder="Select existing candidate (optional)"
               value={selectedCandidateId}
-              onChange={(e) => handleCandidateChange(e.target.value)}
+              onChange={(val) => handleCandidateChange(String(val))}
               options={[
                 { value: '', label: 'Enter manually' },
                 ...(candidatesData ?? []).map((c) => ({
                   value: String(c.id),
                   label: `${c.name} — ${c.cnic}`,
+                  searchTerms: `${c.name} ${c.cnic}`,
                 })),
               ]}
             />
@@ -255,9 +260,13 @@ export default function TestCreate() {
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-end gap-3">
                     <div className="flex-1">
-                      <Select
+                      <SearchableSelect
+                        name={`category_rows.${index}.category_id`}
                         label={index === 0 ? 'Category' : undefined}
-                        {...register(`category_rows.${index}.category_id`)}
+                        value={categoryRows[index]?.category_id ?? ''}
+                        onChange={(val) => {
+                          setValue(`category_rows.${index}.category_id`, String(val), { shouldValidate: true })
+                        }}
                         error={errors.category_rows?.[index]?.category_id?.message}
                         options={availableCategories(index).map((c) => ({
                           value: String(c.id),
