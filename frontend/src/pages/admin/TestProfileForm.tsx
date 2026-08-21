@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useWatch, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -55,7 +55,7 @@ export default function TestProfileForm() {
     enabled: isEdit,
   })
 
-  const { register, control, handleSubmit, formState: { errors }, reset, watch } = useForm<ProfileForm>({
+  const { register, control, handleSubmit, formState: { errors }, reset } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
@@ -65,6 +65,8 @@ export default function TestProfileForm() {
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'categories' })
+
+  const watchedCategories = useWatch({ control, name: 'categories' })
 
   useEffect(() => {
     if (profile) {
@@ -103,7 +105,7 @@ export default function TestProfileForm() {
     },
   })
 
-  const usedCategories = watch('categories').map((cat) => cat.category_id).filter(Boolean)
+  const usedCategories = watchedCategories.map((cat) => cat.category_id).filter(Boolean)
   const availableCategories = (categories ?? []).filter((cat) => !usedCategories.includes(String(cat.id)) || isEdit)
 
   if (isEdit && profileLoading) {
@@ -158,9 +160,8 @@ export default function TestProfileForm() {
                       <Select
                         placeholder="Select category"
                         error={errors.categories?.[index]?.category_id?.message}
-                        value={watch(`categories.${index}.category_id`)}
+                        value={watchedCategories[index]?.category_id ?? ''}
                         onChange={(e) => {
-                          // Update via register
                           const event = { target: { value: e.target.value, name: `categories.${index}.category_id` } }
                           register(`categories.${index}.category_id`).onChange(event)
                         }}

@@ -31,7 +31,7 @@ export default function CandidateForm() {
   const { success, error: toastError } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [cvFile, setCvFile] = useState<File | null>(null)
-  const [cvPreview, setCvPreview] = useState<string | null>(null)
+  const [cvFileName, setCvFileName] = useState<string | null>(null)
 
   const { data: candidate, isLoading: candidateLoading } = useQuery({
     queryKey: ['candidate', id],
@@ -60,11 +60,11 @@ export default function CandidateForm() {
         email: candidate.email ?? '',
         phone: candidate.phone ?? '',
       })
-      if (candidate.cv_path) {
-        setCvPreview(candidate.cv_path)
-      }
     }
   }, [candidate, reset])
+
+  const existingCvName = candidate?.cv_path ? candidate.cv_path.split('/').pop() ?? null : null
+  const displayCvName = cvFileName ?? existingCvName
 
   const mutation = useMutation({
     mutationFn: async (data: CandidateForm) => {
@@ -111,7 +111,7 @@ export default function CandidateForm() {
       return
     }
     setCvFile(file)
-    setCvPreview(file.name)
+    setCvFileName(file.name)
   }
 
   if (isEdit && candidateLoading) {
@@ -178,13 +178,13 @@ export default function CandidateForm() {
                 onChange={handleFileChange}
                 className="hidden"
               />
-              {cvPreview ? (
+              {displayCvName ? (
                 <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
                   <FileText className="h-5 w-5 text-primary-500" />
-                  <span className="flex-1 text-sm truncate">{cvPreview}</span>
+                  <span className="flex-1 text-sm truncate">{displayCvName}</span>
                   <button
                     type="button"
-                    onClick={() => { setCvFile(null); setCvPreview(null) }}
+                    onClick={() => { setCvFile(null); setCvFileName(null) }}
                     className="text-slate-400 hover:text-slate-600"
                   >
                     <X className="h-4 w-4" />
