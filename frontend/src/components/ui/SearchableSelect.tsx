@@ -156,8 +156,15 @@ export default function SearchableSelect({
                   placeholder="Search..."
                   value={query}
                   onChange={(e) => {
-                    setQuery(e.target.value)
-                    setHighlightedIndex(-1)
+                    const newQuery = e.target.value
+                    setQuery(newQuery)
+                    const lower = newQuery.toLowerCase()
+                    const firstMatch = options.findIndex(
+                      (opt) =>
+                        opt.label.toLowerCase().includes(lower) ||
+                        opt.searchTerms?.toLowerCase().includes(lower),
+                    )
+                    setHighlightedIndex(firstMatch >= 0 ? firstMatch : -1)
                   }}
                   onKeyDown={handleKeyDown}
                   className="w-full bg-transparent text-sm text-slate-900 placeholder-slate-400 outline-none dark:text-slate-100 dark:placeholder-slate-500"
