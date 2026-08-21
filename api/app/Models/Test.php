@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'test_id',
     'candidate_name',
     'candidate_cnic',
+    'candidate_id',
     'duration_minutes',
     'total_marks',
     'status',
@@ -57,6 +59,11 @@ class Test extends Model
     public function candidateAnswers(): HasMany
     {
         return $this->hasMany(CandidateAnswer::class);
+    }
+
+    public function candidate(): BelongsTo
+    {
+        return $this->belongsTo(Candidate::class);
     }
 
     public function result(): HasOne

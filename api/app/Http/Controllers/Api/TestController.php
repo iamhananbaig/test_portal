@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Exceptions\InsufficientQuestionsException;
 use App\Http\Controllers\Controller;
 use App\Models\Test;
+use App\Models\TestProfile;
 use App\Services\TestGenerationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,9 +19,40 @@ class TestController extends Controller
 
     public function generate(Request $request): JsonResponse
     {
+        $testProfileId = $request->input('test_profile_id');
+        $candidateId = $request->input('candidate_id');
+
+        if ($testProfileId) {
+            $validated = $request->validate([
+                'test_profile_id' => ['required', 'exists:test_profiles,id'],
+                'candidate_name' => ['required', 'string', 'max:255'],
+                'candidate_cnic' => ['required', 'string', 'max:15'],
+                'candidate_id' => ['nullable', 'exists:candidates,id'],
+            ]);
+
+            $profile = TestProfile::with('categories')->findOrFail($validated['test_profile_id']);
+
+            try {
+                $test = $this->testService->generateFromProfile(
+                    $profile,
+                    $validated['candidate_name'],
+                    $validated['candidate_cnic'],
+                    $validated['candidate_id'] ?? null,
+                );
+
+                return response()->json([
+                    'message' => 'Test generated successfully',
+                    'data' => new TestResource($test),
+                ], 201);
+            } catch (InsufficientQuestionsException $e) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+        }
+
         $validated = $request->validate([
             'candidate_name' => ['required', 'string', 'max:255'],
             'candidate_cnic' => ['required', 'string', 'max:15'],
+            'candidate_id' => ['nullable', 'exists:candidates,id'],
             'categories' => ['required', 'array', 'min:1'],
             'categories.*.category_id' => ['required', 'exists:categories,id'],
             'categories.*.count' => ['required', 'integer', 'min:1'],
@@ -33,6 +65,8 @@ class TestController extends Controller
                 $validated['candidate_cnic'],
                 $validated['categories'],
                 $validated['duration_minutes'],
+                null,
+                $validated['candidate_id'] ?? null,
             );
 
             return response()->json([
@@ -48,7 +82,7 @@ class TestController extends Controller
 
     public function index(Request $request): ResourceCollection
     {
-        $query = Test::query();
+        $query = Test::query()->with('candidate');
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
@@ -70,7 +104,7 @@ class TestController extends Controller
 
     public function show(Test $test): TestResource
     {
-        return new TestResource($test->load(['test_questions.question', 'test_questions.category']));
+        return new TestResource($test->load(['test_questions.question', 'test_questions.category', 'candidate']));
     }
 
     public function start(Test $test): JsonResponse

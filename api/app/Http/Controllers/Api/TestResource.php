@@ -14,6 +14,7 @@ class TestResource extends JsonResource
             'test_id' => $this->test_id,
             'candidate_name' => $this->candidate_name,
             'candidate_cnic' => $this->candidate_cnic,
+            'candidate_id' => $this->candidate_id,
             'duration_minutes' => $this->duration_minutes,
             'total_marks' => (float) $this->total_marks,
             'status' => $this->status,
@@ -23,6 +24,7 @@ class TestResource extends JsonResource
             'ends_at' => $this->ends_at,
             'submitted_at' => $this->submitted_at,
             'submission_method' => $this->submission_method,
+            'candidate' => new CandidateResource($this->whenLoaded('candidate')),
             'questions' => TestQuestionResource::collection($this->whenLoaded('test_questions')),
         ];
     }

@@ -15,6 +15,11 @@ const Dashboard = lazy(() => import('@/pages/admin/Dashboard'))
 const Categories = lazy(() => import('@/pages/admin/Categories'))
 const QuestionBank = lazy(() => import('@/pages/admin/QuestionBank'))
 const QuestionForm = lazy(() => import('@/pages/admin/QuestionForm'))
+const TestProfileList = lazy(() => import('@/pages/admin/TestProfileList'))
+const TestProfileForm = lazy(() => import('@/pages/admin/TestProfileForm'))
+const CandidateList = lazy(() => import('@/pages/admin/CandidateList'))
+const CandidateForm = lazy(() => import('@/pages/admin/CandidateForm'))
+const CandidateDetail = lazy(() => import('@/pages/admin/CandidateDetail'))
 const TestCreate = lazy(() => import('@/pages/admin/TestCreate'))
 const TestList = lazy(() => import('@/pages/admin/TestList'))
 const Marking = lazy(() => import('@/pages/admin/Marking'))
@@ -77,6 +82,13 @@ export default function App() {
                     <Route path="questions" element={<QuestionBank />} />
                     <Route path="questions/new" element={<QuestionForm />} />
                     <Route path="questions/:id/edit" element={<QuestionForm />} />
+                    <Route path="profiles" element={<TestProfileList />} />
+                    <Route path="profiles/new" element={<TestProfileForm />} />
+                    <Route path="profiles/:id/edit" element={<TestProfileForm />} />
+                    <Route path="candidates" element={<CandidateList />} />
+                    <Route path="candidates/new" element={<CandidateForm />} />
+                    <Route path="candidates/:id" element={<CandidateDetail />} />
+                    <Route path="candidates/:id/edit" element={<CandidateForm />} />
                     <Route path="tests" element={<TestList />} />
                     <Route path="tests/new" element={<TestCreate />} />
                     <Route path="marking" element={<Marking />} />

@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CandidateController;
+use App\Http\Controllers\Api\CandidateManagementController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MarkingController;
 use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\ResultController;
 use App\Http\Controllers\Api\TestController;
+use App\Http\Controllers\Api\TestProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json(['status' => 'ok']));
@@ -26,10 +28,16 @@ Route::middleware(['auth:api', 'throttle:admin'])->group(function () {
     Route::post('/questions/{question}/options/{option}/image', [QuestionController::class, 'uploadOptionImage']);
     Route::delete('/questions/{question}/options/{option}/image', [QuestionController::class, 'destroyOptionImage']);
 
+    Route::apiResource('test-profiles', TestProfileController::class);
+
     Route::post('/tests/generate', [TestController::class, 'generate']);
     Route::get('/tests', [TestController::class, 'index']);
     Route::get('/tests/{test}', [TestController::class, 'show']);
     Route::post('/tests/{test}/start', [TestController::class, 'start']);
+
+    Route::apiResource('candidates', CandidateManagementController::class);
+    Route::post('candidates/{candidate}/cv', [CandidateManagementController::class, 'uploadCv']);
+    Route::get('candidates/{candidate}/cv', [CandidateManagementController::class, 'downloadCv']);
 
     Route::get('/marking/pending', [MarkingController::class, 'pending']);
     Route::get('/marking/{test}', [MarkingController::class, 'show']);

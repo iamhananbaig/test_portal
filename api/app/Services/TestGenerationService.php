@@ -6,6 +6,7 @@ use App\Exceptions\InsufficientQuestionsException;
 use App\Models\Category;
 use App\Models\Question;
 use App\Models\Test;
+use App\Models\TestProfile;
 use App\Models\TestQuestion;
 use Illuminate\Support\Str;
 
@@ -16,6 +17,8 @@ class TestGenerationService
         string $candidateCnic,
         array $categoryConfig,
         int $durationMinutes,
+        ?int $testProfileId = null,
+        ?int $candidateId = null,
     ): Test {
         $this->validateCategories($categoryConfig);
 
@@ -59,6 +62,7 @@ class TestGenerationService
             'test_id' => $testId,
             'candidate_name' => $candidateName,
             'candidate_cnic' => $candidateCnic,
+            'candidate_id' => $candidateId,
             'duration_minutes' => $durationMinutes,
             'total_marks' => $totalMarks,
             'status' => 'ready',
@@ -71,6 +75,27 @@ class TestGenerationService
         }
 
         return $test->load('test_questions.question');
+    }
+
+    public function generateFromProfile(
+        TestProfile $profile,
+        string $candidateName,
+        string $candidateCnic,
+        ?int $candidateId = null,
+    ): Test {
+        $categoryConfig = $profile->categories->map(fn ($cat) => [
+            'category_id' => $cat->category_id,
+            'count' => $cat->question_count,
+        ])->toArray();
+
+        return $this->generate(
+            $candidateName,
+            $candidateCnic,
+            $categoryConfig,
+            $profile->duration_minutes,
+            $profile->id,
+            $candidateId,
+        );
     }
 
     private function validateCategories(array $categoryConfig): void
