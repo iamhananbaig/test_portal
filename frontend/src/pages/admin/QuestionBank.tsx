@@ -108,7 +108,7 @@ export default function QuestionBank() {
               onChange={(e) => updateFilter('category_id', e.target.value)}
               options={[
                 { value: '', label: 'All' },
-                ...categories.map((c) => ({ value: c.id, label: c.name })),
+                ...categories.map((c) => ({ value: String(c.id), label: c.name })),
               ]}
             />
             <Select

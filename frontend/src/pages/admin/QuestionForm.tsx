@@ -300,7 +300,7 @@ export default function QuestionForm() {
               label="Category"
               {...register('category_id')}
               error={errors.category_id?.message}
-              options={categories.map((c) => ({ value: c.id, label: c.name }))}
+              options={categories.map((c) => ({ value: String(c.id), label: c.name }))}
               placeholder="Select category"
             />
             <Select

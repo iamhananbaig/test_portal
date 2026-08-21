@@ -260,7 +260,7 @@ export default function TestCreate() {
                         {...register(`category_rows.${index}.category_id`)}
                         error={errors.category_rows?.[index]?.category_id?.message}
                         options={availableCategories(index).map((c) => ({
-                          value: c.id,
+                          value: String(c.id),
                           label: c.name,
                         }))}
                         placeholder="Select category"
