@@ -15,6 +15,7 @@ const Dashboard = lazy(() => import('@/pages/admin/Dashboard'))
 const Categories = lazy(() => import('@/pages/admin/Categories'))
 const QuestionBank = lazy(() => import('@/pages/admin/QuestionBank'))
 const QuestionForm = lazy(() => import('@/pages/admin/QuestionForm'))
+const BulkUpload = lazy(() => import('@/pages/admin/BulkUpload'))
 const TestProfileList = lazy(() => import('@/pages/admin/TestProfileList'))
 const TestProfileForm = lazy(() => import('@/pages/admin/TestProfileForm'))
 const CandidateList = lazy(() => import('@/pages/admin/CandidateList'))
@@ -82,6 +83,7 @@ export default function App() {
                     <Route path="questions" element={<QuestionBank />} />
                     <Route path="questions/new" element={<QuestionForm />} />
                     <Route path="questions/:id/edit" element={<QuestionForm />} />
+                    <Route path="questions/bulk-upload" element={<BulkUpload />} />
                     <Route path="profiles" element={<TestProfileList />} />
                     <Route path="profiles/new" element={<TestProfileForm />} />
                     <Route path="profiles/:id/edit" element={<TestProfileForm />} />
