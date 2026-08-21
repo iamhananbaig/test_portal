@@ -5,6 +5,7 @@ import { candidateApi } from '@/services/api'
 import { useTheme } from '@/context/useTheme'
 import { getErrorMessage } from '@/lib/errors'
 import Button from '@/components/ui/Button'
+import ImageModal from '@/components/ui/ImageModal'
 import Modal from '@/components/ui/Modal'
 import Skeleton from '@/components/ui/Skeleton'
 
@@ -52,6 +53,7 @@ export default function CandidateTest() {
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [pendingImagePreview, setPendingImagePreview] = useState<string | null>(null)
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null)
   const answerImageRef = useRef<HTMLInputElement>(null)
 
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -555,7 +557,8 @@ export default function CandidateTest() {
                 <img
                   src={`/storage/${currentQuestion.image_path}`}
                   alt="Question"
-                  className="mt-3 max-w-full rounded-lg border border-slate-200 dark:border-slate-700"
+                  className="mt-3 max-w-full rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setEnlargedImage(`/storage/${currentQuestion.image_path}`)}
                 />
               )}
             </div>
@@ -590,7 +593,11 @@ export default function CandidateTest() {
                       <img
                         src={`/storage/${option.image_path}`}
                         alt={`Option ${option.label}`}
-                        className="max-h-16 rounded"
+                        className="max-h-16 rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEnlargedImage(`/storage/${option.image_path}`)
+                        }}
                       />
                     )}
                   </label>
@@ -702,6 +709,11 @@ export default function CandidateTest() {
           Once submitted, you cannot go back to change your answers.
         </p>
       </Modal>
+      <ImageModal
+        src={enlargedImage || ''}
+        open={enlargedImage !== null}
+        onClose={() => setEnlargedImage(null)}
+      />
     </div>
   )
 }
