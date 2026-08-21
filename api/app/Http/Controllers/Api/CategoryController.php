@@ -33,4 +33,11 @@ class CategoryController extends Controller
 
         return response()->json(new CategoryResource($category));
     }
+
+    public function toggleStatus(Category $category): JsonResponse
+    {
+        $category->update(['is_active' => ! $category->is_active]);
+
+        return response()->json(new CategoryResource($category));
+    }
 }
