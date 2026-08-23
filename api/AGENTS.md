@@ -39,6 +39,13 @@ Laravel 13 on PHP 8.4. Always use APIs matching the installed major version — 
 
 - After modifying PHP files, always run: `vendor/bin/pint --dirty --format agent`
 
+## Image Handling
+
+- Images are stored on the `public` disk (`storage/app/public/`).
+- `ImageService::save()` always passes `'public'` as the disk parameter.
+- Frontend accesses images via `/storage/{path}` — requires symlink (`php artisan storage:link`) and Vite proxy for `/storage`.
+- Option images are sent as nested FormData: `options[0][image]`, `options[1][image]`, etc. Use `$request->hasFile("options.{$index}.image")` — NOT `$request->hasFile('options')` which always returns false.
+
 ## Frontend Assets (Blade)
 
 - Admin Blade assets are built from `api/` via Vite with Tailwind CSS v4.
@@ -76,7 +83,7 @@ Before relying on a package's API, confirm its installed version:
 
 ## Skills Activation
 
-This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
+This project has domain-specific skills available in `.agents/skills/` (root directory). You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
 ## Conventions
 

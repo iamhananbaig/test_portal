@@ -202,6 +202,29 @@ Authorization: Bearer <token>
 
 ---
 
+### Toggle Category Status
+
+```
+PUT /api/categories/{id}/status
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "data": {
+    "id": 4,
+    "name": "Corporate Law",
+    "is_active": false,
+    "questions_count": 0,
+    "created_at": "2026-08-21T12:00:00.000000Z",
+    "updated_at": "2026-08-21T12:30:00.000000Z"
+  }
+}
+```
+
+---
+
 ## Questions
 
 ### List Questions
@@ -390,6 +413,185 @@ Authorization: Bearer <token>
 ```json
 {
   "message": "Image removed"
+}
+```
+
+---
+
+### Upload Option Image
+
+```
+POST /api/questions/{question}/options/{option}/image
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Form Fields:**
+| Field | Type | Rules |
+|---|---|---|
+| image | file | required, image, jpg/jpeg/png, max 5MB |
+
+**Response (200):**
+```json
+{
+  "image_path": "questions/options/abc123.jpg"
+}
+```
+
+---
+
+### Delete Option Image
+
+```
+DELETE /api/questions/{question}/options/{option}/image
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Image removed"
+}
+```
+
+---
+
+## Bulk Question Upload
+
+### Download Sample File
+
+```
+GET /api/questions/sample-download
+Authorization: Bearer <token>
+```
+
+**Response:** Excel file download (.xlsx)
+
+---
+
+### Validate Upload
+
+```
+POST /api/questions/validate-upload
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Form Fields:**
+| Field | Type | Rules |
+|---|---|---|
+| file | file | required, xlsx/xls/csv |
+
+**Response (200):**
+```json
+{
+  "valid": true,
+  "rows": 25,
+  "errors": []
+}
+```
+
+---
+
+### Import Questions
+
+```
+POST /api/questions/bulk-import
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Form Fields:**
+| Field | Type | Rules |
+|---|---|---|
+| file | file | required, xlsx/xls/csv |
+
+**Response (201):**
+```json
+{
+  "message": "25 questions imported successfully.",
+  "imported": 25
+}
+```
+
+---
+
+## Test Profiles
+
+### List Test Profiles
+
+```
+GET /api/test-profiles
+Authorization: Bearer <token>
+```
+
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| per_page | int | 15 | Items per page (max 100) |
+
+**Response (200):** Paginated TestProfileResource objects.
+
+---
+
+### Create Test Profile
+
+```
+POST /api/test-profiles
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "name": "Standard 60min Test",
+  "duration_minutes": 60,
+  "categories": [
+    { "category_id": 1, "count": 20 },
+    { "category_id": 2, "count": 15 }
+  ]
+}
+```
+
+**Response (201):** TestProfile object with categories.
+
+---
+
+### Get Test Profile
+
+```
+GET /api/test-profiles/{id}
+Authorization: Bearer <token>
+```
+
+**Response (200):** TestProfile object with categories.
+
+---
+
+### Update Test Profile
+
+```
+PUT /api/test-profiles/{id}
+Authorization: Bearer <token>
+```
+
+**Request:** Same as create.
+
+**Response (200):** Updated TestProfile object.
+
+---
+
+### Delete Test Profile
+
+```
+DELETE /api/test-profiles/{id}
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Test profile deleted."
 }
 ```
 
@@ -711,6 +913,138 @@ Authorization: Bearer <token>
   ]
 }
 ```
+
+---
+
+## Candidate Management
+
+### List Candidates
+
+```
+GET /api/candidates
+Authorization: Bearer <token>
+```
+
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| per_page | int | 15 | Items per page (max 100) |
+| search | string | — | Search by name, CNIC, email |
+
+**Response (200):** Paginated CandidateResource objects.
+
+---
+
+### Create Candidate
+
+```
+POST /api/candidates
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "name": "Ahmed Ali",
+  "cnic": "35202-1234567-1",
+  "email": "ahmed@example.com",
+  "phone": "+923001234567"
+}
+```
+
+**Response (201):** Candidate object.
+
+---
+
+### Get Candidate
+
+```
+GET /api/candidates/{id}
+Authorization: Bearer <token>
+```
+
+**Response (200):** Candidate object with tests relation.
+
+---
+
+### Update Candidate
+
+```
+PUT /api/candidates/{id}
+Authorization: Bearer <token>
+```
+
+**Request:** Same as create.
+
+**Response (200):** Updated Candidate object.
+
+---
+
+### Delete Candidate
+
+```
+DELETE /api/candidates/{id}
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Candidate deleted."
+}
+```
+
+---
+
+### Upload CV
+
+```
+POST /api/candidates/{id}/cv
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Form Fields:**
+| Field | Type | Rules |
+|---|---|---|
+| cv | file | required, pdf/doc/docx, max 10MB |
+
+**Response (200):**
+```json
+{
+  "cv_path": "candidates/cv_abc123.pdf"
+}
+```
+
+---
+
+### Download CV
+
+```
+GET /api/candidates/{id}/cv
+Authorization: Bearer <token>
+```
+
+**Response:** File download.
+
+---
+
+### Update Excel Score
+
+```
+PUT /api/candidates/{id}/excel-score
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "excel_score": 85.5,
+  "excel_remarks": "Strong candidate"
+}
+```
+
+**Response (200):** Updated Candidate object.
 
 ---
 

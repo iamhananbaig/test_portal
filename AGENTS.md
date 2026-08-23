@@ -89,22 +89,19 @@ cd api && npm run build         # vite build (Blade assets)
   - `candidateApi` — public candidate API client (no auth headers)
 - **react-router v8** for routing. Admin routes under `/admin`, candidate routes under `/candidate`.
 - Auth context at `frontend/src/context/AuthContext.tsx` — stores token + user in localStorage
-- Vite dev server proxies `/api` to `http://127.0.0.1:8000` (backend)
+- Vite dev server proxies `/api` and `/storage` to `http://127.0.0.1:8000` (backend)
 - Pages export default functions, no barrel exports
 
 ## Database
 
 - Dev: MySQL 8 on `127.0.0.1:3306` (configured in `api/.env`)
 - Tests: SQLite in-memory (overridden in `api/phpunit.xml`)
-- Planned tables (from `plan.md`): users, categories, questions, question_options, tests, test_questions, candidate_answers, results
+- Tables: users, categories, questions, question_options, tests, test_questions, candidate_answers, results, candidates, test_profiles, test_profile_categories
 
 ## Skills
 
-Domain-specific skills in `api/.agents/skills/`:
-- `laravel-best-practices` — Laravel architecture, queries, auth, validation
-- `pest-testing` — Pest PHP test creation and patterns
-- `tailwindcss-development` — Tailwind CSS v4
-- `infer-conventions` — Detect and document project conventions
+Domain-specific skills available:
+- **Root** (`.agents/skills/`): `frontend-design`, `agent-browser`
 
 Activate the relevant skill when working in that domain.
 
@@ -119,4 +116,4 @@ The `laravel-boost` MCP server is configured for this project (runs `php artisan
 
 ## API Routes (from `plan.md`)
 
-27 endpoints across 6 groups: Auth, Categories, Questions, Tests, Marking, Results, plus public Candidate Portal routes. All defined in `plan.md:179-242` and implemented in `api/routes/api.php`.
+45+ endpoints across 8 groups: Auth, Categories, Questions (including bulk upload), Test Profiles, Tests, Candidates, Marking, Results, plus public Candidate Portal routes. All defined in `api/routes/api.php`.

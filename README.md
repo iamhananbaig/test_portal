@@ -11,6 +11,8 @@ Hiring assessment portal for admin-managed candidate testing. Administrators cre
 | Styling | Tailwind CSS v4 |
 | Auth | JWT (`tymon/jwt-auth`) |
 | Icons | lucide-react |
+| Forms | react-hook-form + zod |
+| Data fetching | @tanstack/react-query + axios |
 | Testing | Pest PHP 5 (backend), oxlint (frontend) |
 
 ## Quick Start

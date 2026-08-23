@@ -7,21 +7,21 @@ test_portal/
 ├── api/                    # Laravel 13 backend + Blade admin assets
 │   ├── app/
 │   │   ├── Http/
-│   │   │   ├── Controllers/Api/   # 7 controllers + 5 API resources
+│   │   │   ├── Controllers/Api/   # 10 controllers + 8 API resources
 │   │   │   └── Requests/          # Form request validation
-│   │   ├── Models/                # 8 Eloquent models
+│   │   ├── Models/                # 11 Eloquent models
 │   │   └── Services/              # Business logic (3 services)
 │   ├── database/
-│   │   ├── migrations/            # 11 migrations
+│   │   ├── migrations/            # 18 migrations
 │   │   ├── seeders/               # User + Category seeders
 │   │   └── factories/             # Model factories for tests
 │   ├── routes/api.php             # All API routes
 │   └── tests/                     # Pest PHP tests (Feature + Unit)
 ├── frontend/               # React 19 SPA (candidate portal + admin UI)
 │   └── src/
-│       ├── pages/admin/            # 11 admin pages
+│       ├── pages/admin/            # 16 admin pages
 │       ├── pages/candidate/        # 4 candidate pages
-│       ├── components/ui/          # 15 reusable UI components
+│       ├── components/ui/          # 16 reusable UI components
 │       ├── context/                # Auth + Theme providers
 │       ├── services/               # Axios API client
 │       └── hooks/                  # Custom React hooks
@@ -46,6 +46,7 @@ Two separate `package.json` files:
 | Data fetching | @tanstack/react-query + axios |
 | Linting | oxlint (frontend), Laravel Pint (backend) |
 | Testing | Pest PHP 5 (backend) |
+| Spreadsheets | openspout/openspout (Excel export/import) |
 
 ## Database Schema
 
@@ -71,6 +72,38 @@ categories ──┬── questions ──┬── question_options       │
 | name | varchar(255) | |
 | email | varchar(255) unique | |
 | password | varchar(255) | hashed |
+
+#### `candidates`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| name | varchar(255) | |
+| cnic | varchar(15) | |
+| email | varchar(255) nullable | |
+| phone | varchar(255) nullable | |
+| cv_path | varchar(255) nullable | local file path |
+| excel_score | decimal(5,2) nullable | imported from Excel |
+| excel_remarks | text nullable | imported from Excel |
+| created_at, updated_at | timestamp | |
+
+#### `test_profiles`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| name | varchar(255) | profile name |
+| duration_minutes | integer | default duration |
+| created_at, updated_at | timestamp | |
+
+#### `test_profile_categories`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| test_profile_id | FK → test_profiles | |
+| category_id | FK → categories | |
+| count | integer | questions per category |
 
 #### `categories`
 
@@ -113,6 +146,7 @@ Default seed: IQ, Accounting, Tax
 |---|---|---|
 | id | bigint PK | |
 | test_id | varchar(8) unique | e.g. `A8KM-P2Q7` |
+| candidate_id | FK → candidates nullable | linked candidate record |
 | candidate_name | varchar(255) | |
 | candidate_cnic | varchar(15) | |
 | duration_minutes | integer | |
@@ -211,8 +245,16 @@ Handles question image uploads:
 | `/admin/questions` | Question bank |
 | `/admin/questions/new` | Create question |
 | `/admin/questions/:id/edit` | Edit question |
+| `/admin/questions/bulk-upload` | Bulk upload questions |
 | `/admin/tests` | Test listing |
 | `/admin/tests/new` | Generate test |
+| `/admin/test-profiles` | Test profile listing |
+| `/admin/test-profiles/new` | Create test profile |
+| `/admin/test-profiles/:id/edit` | Edit test profile |
+| `/admin/candidates` | Candidate listing |
+| `/admin/candidates/new` | Add candidate |
+| `/admin/candidates/:id` | Candidate detail |
+| `/admin/candidates/:id/edit` | Edit candidate |
 | `/admin/marking` | Pending marking list |
 | `/admin/marking/:id` | Mark descriptive answers |
 | `/admin/results` | Results listing |
@@ -239,3 +281,35 @@ Handles question image uploads:
 | Randomization | `RAND()` per category for question selection; fixed category and option order |
 | MCQ-only tests | After submission, skip "pending_review" → go straight to "completed" |
 | Single admin | No roles or permissions in V1 |
+
+## API Routes
+
+45+ endpoints across 8 groups: Auth, Categories, Questions (including bulk upload), Test Profiles, Tests, Candidates, Marking, Results, plus public Candidate Portal routes. All defined in `api/routes/api.php`.
+
+### Admin Routes (auth required)
+
+| Group | Endpoints |
+|---|---|
+| Auth | login, logout, me |
+| Categories | CRUD + toggle status |
+| Questions | CRUD + toggle status + image upload/delete + option images |
+| Bulk Upload | sample download, validate, import |
+| Test Profiles | CRUD |
+| Tests | generate, list, show, start |
+| Candidates | CRUD + CV upload/download + Excel score |
+| Marking | pending list, show, save marks, finalize |
+| Results | dashboard stats, list, show |
+
+### Candidate Routes (public, rate-limited)
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/candidate/validate` | POST | Validate test ID |
+| `/api/candidate/{testId}/instructions` | GET | Get test instructions |
+| `/api/candidate/{testId}/start` | POST | Start test |
+| `/api/candidate/{testId}/questions` | GET | Get questions |
+| `/api/candidate/{testId}/answer` | PUT | Save answer |
+| `/api/candidate/{testId}/flag` | PUT | Flag/unflag question |
+| `/api/candidate/{testId}/submit` | POST | Submit test |
+| `/api/candidate/{testId}/status` | GET | Check status |
+| `/api/candidate/{testId}/time` | GET | Get remaining time |
