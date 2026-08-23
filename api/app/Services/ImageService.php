@@ -12,7 +12,7 @@ class ImageService
     {
         $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
 
-        return $file->storeAs($directory, $filename);
+        return $file->storeAs($directory, $filename, 'public');
     }
 
     public function delete(string $path): bool

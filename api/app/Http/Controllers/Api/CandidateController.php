@@ -195,22 +195,26 @@ class CandidateController extends Controller
             }
         }
 
-        $answerImagePath = null;
+        $updateData = [
+            'selected_option_id' => $validated['selected_option_id'] ?? null,
+            'descriptive_answer' => $validated['descriptive_answer'] ?? null,
+            'time_spent_seconds' => $validated['time_spent_seconds'] ?? 0,
+        ];
+
         if ($request->hasFile('answer_image')) {
-            $answerImagePath = $this->imageService->save($request->file('answer_image'), 'answers');
+            $updateData['answer_image_path'] = $this->imageService->save($request->file('answer_image'), 'answers');
         }
 
         CandidateAnswer::updateOrCreate(
             ['test_id' => $test->id, 'question_id' => $validated['question_id']],
-            [
-                'selected_option_id' => $validated['selected_option_id'] ?? null,
-                'descriptive_answer' => $validated['descriptive_answer'] ?? null,
-                'answer_image_path' => $answerImagePath,
-                'time_spent_seconds' => $validated['time_spent_seconds'] ?? 0,
-            ]
+            $updateData
         );
 
-        return response()->json(['message' => 'Answer saved.', 'saved' => true]);
+        return response()->json([
+            'message' => 'Answer saved.',
+            'saved' => true,
+            'answer_image_path' => $updateData['answer_image_path'] ?? null,
+        ]);
     }
 
     public function flag(Request $request, Test $test): JsonResponse

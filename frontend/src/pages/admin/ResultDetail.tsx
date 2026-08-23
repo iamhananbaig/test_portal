@@ -39,12 +39,14 @@ interface QuestionOption {
   id: number
   label: string
   text: string
+  image_path: string | null
   is_correct: boolean
 }
 
 interface Question {
   question_id: number
   text: string
+  image_path: string | null
   type: string
   marks: number
   category: string
@@ -275,6 +277,13 @@ export default function ResultDetail() {
                       </span>
                     </div>
                     <p className="mt-2 text-slate-900 dark:text-slate-100">{question.text}</p>
+                    {question.image_path && (
+                      <img
+                        src={`/storage/${question.image_path}`}
+                        alt="Question"
+                        className="mt-2 max-h-48 rounded-lg border border-slate-200 dark:border-slate-700"
+                      />
+                    )}
 
                     {question.type === 'mcq' && question.options.length > 0 && (
                       <div className="mt-3 space-y-2">
@@ -296,6 +305,13 @@ export default function ResultDetail() {
                             >
                               <span className="font-medium">{option.label}.</span>
                               <span>{option.text}</span>
+                              {option.image_path && (
+                                <img
+                                  src={`/storage/${option.image_path}`}
+                                  alt={`Option ${option.label}`}
+                                  className="ml-2 max-h-12 rounded"
+                                />
+                              )}
                               {isSelected && (
                                 <span className="ml-auto text-xs font-medium">Selected</span>
                               )}

@@ -63,13 +63,11 @@ class QuestionController extends Controller
             $question->update(['image_path' => $path]);
         }
 
-        if ($request->hasFile('options')) {
-            foreach ($request->file('options') as $index => $optionFile) {
-                if ($optionFile) {
-                    $path = $this->imageService->save($optionFile, 'questions/options');
-                    $label = $request->input("options.{$index}.label");
-                    $question->options()->where('label', $label)->update(['image_path' => $path]);
-                }
+        foreach ($request->input('options') ?? [] as $index => $optionData) {
+            if ($request->hasFile("options.{$index}.image")) {
+                $path = $this->imageService->save($request->file("options.{$index}.image"), 'questions/options');
+                $label = $optionData['label'];
+                $question->options()->where('label', $label)->update(['image_path' => $path]);
             }
         }
 
@@ -95,13 +93,11 @@ class QuestionController extends Controller
             $question->update(['image_path' => $path]);
         }
 
-        if ($request->hasFile('options')) {
-            foreach ($request->file('options') as $index => $optionFile) {
-                if ($optionFile) {
-                    $path = $this->imageService->save($optionFile, 'questions/options');
-                    $label = $request->input("options.{$index}.label");
-                    $question->options()->where('label', $label)->update(['image_path' => $path]);
-                }
+        foreach ($request->input('options') ?? [] as $index => $optionData) {
+            if ($request->hasFile("options.{$index}.image")) {
+                $path = $this->imageService->save($request->file("options.{$index}.image"), 'questions/options');
+                $label = $optionData['label'];
+                $question->options()->where('label', $label)->update(['image_path' => $path]);
             }
         }
 

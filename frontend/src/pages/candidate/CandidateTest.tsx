@@ -172,22 +172,25 @@ export default function CandidateTest() {
       setSaveStatus('saving')
       try {
         const hasImage = answerImage instanceof File
+        let res
         if (hasImage) {
           const formData = new FormData()
           formData.append('question_id', String(questionId))
           if (selectedOptionId) formData.append('selected_option_id', String(selectedOptionId))
           if (descriptiveAnswer) formData.append('descriptive_answer', descriptiveAnswer)
           formData.append('answer_image', answerImage)
-          await candidateApi.put(`/candidate/${testId}/answer`, formData, {
+          res = await candidateApi.put(`/candidate/${testId}/answer`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           })
         } else {
-          await candidateApi.put(`/candidate/${testId}/answer`, {
+          res = await candidateApi.put(`/candidate/${testId}/answer`, {
             question_id: questionId,
             selected_option_id: selectedOptionId,
             descriptive_answer: descriptiveAnswer,
           })
         }
+
+        const savedImagePath = res.data.answer_image_path ?? null
 
         setSaveStatus('saved')
         setData((prev) => {
@@ -196,7 +199,7 @@ export default function CandidateTest() {
             ...prev,
             questions: prev.questions.map((q) =>
               q.id === questionId
-                ? { ...q, selected_option_id: selectedOptionId, descriptive_answer: descriptiveAnswer }
+                ? { ...q, selected_option_id: selectedOptionId, descriptive_answer: descriptiveAnswer, answer_image_path: savedImagePath }
                 : q,
             ),
           }
@@ -566,13 +569,16 @@ export default function CandidateTest() {
             {currentQuestion.type === 'mcq' ? (
               <div className="space-y-2.5">
                 {currentQuestion.options.map((option) => (
-                  <label
+                  <div
                     key={option.id}
                     className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all duration-150 ${
                       currentQuestion.selected_option_id === option.id
                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-xs'
                         : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800'
                     }`}
+                    onClick={() =>
+                      handleAnswerChange(currentQuestion.id, option.id, null)
+                    }
                   >
                     <input
                       type="radio"
@@ -600,7 +606,7 @@ export default function CandidateTest() {
                         }}
                       />
                     )}
-                  </label>
+                  </div>
                 ))}
               </div>
             ) : (

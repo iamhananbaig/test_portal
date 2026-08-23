@@ -51,6 +51,7 @@ class ResultController extends Controller
             return [
                 'question_id' => $tq->question_id,
                 'text' => $tq->question_text,
+                'image_path' => $tq->question_image_path,
                 'type' => $tq->question_type,
                 'marks' => (float) $tq->question_marks,
                 'category' => $tq->category->name,
@@ -59,6 +60,7 @@ class ResultController extends Controller
                     'id' => $opt['id'],
                     'label' => $opt['label'],
                     'text' => $opt['text'],
+                    'image_path' => $opt['image_path'] ?? null,
                     'is_correct' => $opt['is_correct'] ?? false,
                 ]),
                 'selected_option_id' => $answer?->selected_option_id,
