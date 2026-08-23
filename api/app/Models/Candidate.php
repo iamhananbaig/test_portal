@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'cnic', 'email', 'phone', 'cv_path'])]
+#[Fillable(['name', 'cnic', 'email', 'phone', 'cv_path', 'excel_score', 'excel_remarks'])]
 #[Hidden([])]
 class Candidate extends Model
 {

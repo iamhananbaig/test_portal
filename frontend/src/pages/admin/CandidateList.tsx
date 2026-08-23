@@ -22,6 +22,7 @@ interface Candidate {
   email: string | null
   phone: string | null
   cv_path: string | null
+  excel_score: number | null
   tests_count: number
 }
 
@@ -109,6 +110,7 @@ export default function CandidateList() {
                   { key: 'cnic', header: 'CNIC' },
                   { key: 'contact', header: 'Contact' },
                   { key: 'tests', header: 'Tests' },
+                  { key: 'excel', header: 'Excel Score' },
                   { key: 'actions', header: '' },
                 ]}
               >
@@ -132,6 +134,13 @@ export default function CandidateList() {
                     </TableCell>
                     <TableCell>
                       <span className="font-medium">{c.tests_count}</span>
+                    </TableCell>
+                    <TableCell>
+                      {c.excel_score !== null ? (
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">{c.excel_score} / 20</span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

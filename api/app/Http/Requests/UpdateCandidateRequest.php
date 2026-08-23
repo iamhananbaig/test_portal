@@ -18,6 +18,8 @@ class UpdateCandidateRequest extends FormRequest
             'cnic' => ['required', 'string', 'size:15', 'unique:candidates,cnic,'.$this->route('candidate')->id],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'excel_score' => ['nullable', 'numeric', 'min:0', 'max:20'],
+            'excel_remarks' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

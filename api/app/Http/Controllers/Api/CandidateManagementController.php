@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCandidateRequest;
 use App\Http\Requests\UpdateCandidateRequest;
+use App\Http\Requests\UpdateExcelScoreRequest;
 use App\Models\Candidate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -73,6 +74,8 @@ class CandidateManagementController extends Controller
                 'email' => $candidate->email,
                 'phone' => $candidate->phone,
                 'cv_path' => $candidate->cv_path,
+                'excel_score' => $candidate->excel_score ? (float) $candidate->excel_score : null,
+                'excel_remarks' => $candidate->excel_remarks,
                 'tests' => $tests,
                 'total_tests' => $candidate->tests->count(),
                 'average_score' => $averageScore,
@@ -87,6 +90,19 @@ class CandidateManagementController extends Controller
         return response()->json([
             'message' => 'Candidate updated.',
             'data' => new CandidateResource($candidate->fresh()),
+        ]);
+    }
+
+    public function updateExcelScore(UpdateExcelScoreRequest $request, Candidate $candidate): JsonResponse
+    {
+        $candidate->update($request->only('excel_score', 'excel_remarks'));
+
+        return response()->json([
+            'message' => 'Excel score updated.',
+            'data' => [
+                'excel_score' => $candidate->fresh()->excel_score ? (float) $candidate->fresh()->excel_score : null,
+                'excel_remarks' => $candidate->fresh()->excel_remarks,
+            ],
         ]);
     }
 

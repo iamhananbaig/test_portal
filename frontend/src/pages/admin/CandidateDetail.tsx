@@ -1,12 +1,16 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Download, Mail, Phone, CreditCard } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Download, Mail, Phone, CreditCard, Save } from 'lucide-react'
 import api from '@/services/api'
 import Card, { CardContent, CardHeader } from '@/components/ui/Card'
 import Table, { TableRow, TableCell } from '@/components/ui/Table'
 import Skeleton from '@/components/ui/Skeleton'
 import PageHeader from '@/components/ui/PageHeader'
 import StatusBadge from '@/components/ui/StatusBadge'
+import Button from '@/components/ui/Button'
+import { useToast } from '@/context/useToast'
+import { getErrorMessage } from '@/lib/errors'
 import { formatDateTime } from '@/utils/dates'
 
 interface TestResult {
@@ -27,6 +31,8 @@ interface CandidateData {
   email: string | null
   phone: string | null
   cv_path: string | null
+  excel_score: number | null
+  excel_remarks: string | null
   tests: TestResult[]
   total_tests: number
   average_score: number | null
@@ -35,6 +41,11 @@ interface CandidateData {
 export default function CandidateDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { error: toastError } = useToast()
+  const [editingExcel, setEditingExcel] = useState(false)
+  const [excelScore, setExcelScore] = useState<string>('')
+  const [excelRemarks, setExcelRemarks] = useState('')
 
   const { data: candidate, isLoading } = useQuery({
     queryKey: ['candidate', id],
@@ -42,6 +53,22 @@ export default function CandidateDetail() {
       const response = await api.get(`/candidates/${id}`)
       return response.data.data as CandidateData
     },
+  })
+
+  const updateExcelMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.put(`/candidates/${id}/excel-score`, {
+        excel_score: excelScore === '' ? null : parseFloat(excelScore),
+        excel_remarks: excelRemarks || null,
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['candidate', id] })
+      queryClient.invalidateQueries({ queryKey: ['candidates'] })
+      setEditingExcel(false)
+    },
+    onError: (err) => toastError(getErrorMessage(err)),
   })
 
   if (isLoading) {
@@ -119,17 +146,95 @@ export default function CandidateDetail() {
 
             {candidate.cv_path && (
               <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                <a
-                  href={`/api/candidates/${candidate.id}/cv`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={async () => {
+                    const response = await api.get(`/candidates/${candidate.id}/cv`, { responseType: 'blob' })
+                    const url = window.URL.createObjectURL(new Blob([response.data]))
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.setAttribute('download', candidate.cv_path!.split('/').pop() || 'cv')
+                    document.body.appendChild(link)
+                    link.click()
+                    link.remove()
+                    window.URL.revokeObjectURL(url)
+                  }}
                   className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400"
                 >
                   <Download className="h-4 w-4" />
                   Download CV
-                </a>
+                </button>
               </div>
             )}
+
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Excel Evaluation</p>
+                {!editingExcel && (
+                  <button
+                    onClick={() => {
+                      setExcelScore(candidate.excel_score?.toString() ?? '')
+                      setExcelRemarks(candidate.excel_remarks ?? '')
+                      setEditingExcel(true)
+                    }}
+                    className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400"
+                  >
+                    {candidate.excel_score !== null ? 'Edit' : 'Add Score'}
+                  </button>
+                )}
+              </div>
+              {editingExcel ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">Score (out of 20)</label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={excelScore}
+                      onChange={(e) => setExcelScore(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      placeholder="0 - 20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">Remarks</label>
+                    <textarea
+                      value={excelRemarks}
+                      onChange={(e) => setExcelRemarks(e.target.value)}
+                      rows={5}
+                      maxLength={1000}
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      placeholder="Enter evaluation remarks..."
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => updateExcelMutation.mutate()}
+                      loading={updateExcelMutation.isPending}
+                      icon={<Save className="h-3.5 w-3.5" />}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setEditingExcel(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {candidate.excel_score !== null ? `${candidate.excel_score} / 20` : '—'}
+                  </p>
+                  {candidate.excel_remarks && (
+                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">{candidate.excel_remarks}</p>
+                  )}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 

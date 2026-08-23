@@ -44,6 +44,7 @@ Route::middleware(['auth:api', 'throttle:admin'])->group(function () {
     Route::apiResource('candidates', CandidateManagementController::class);
     Route::post('candidates/{candidate}/cv', [CandidateManagementController::class, 'uploadCv']);
     Route::get('candidates/{candidate}/cv', [CandidateManagementController::class, 'downloadCv']);
+    Route::put('candidates/{candidate}/excel-score', [CandidateManagementController::class, 'updateExcelScore']);
 
     Route::get('/marking/pending', [MarkingController::class, 'pending']);
     Route::get('/marking/{test}', [MarkingController::class, 'show']);
