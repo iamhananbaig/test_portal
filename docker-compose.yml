@@ -9,6 +9,7 @@ networks:
 
 services:
   nginx:
+    container_name: portal_nginx
     build:
       context: .
       dockerfile: docker/Dockerfile.nginx
