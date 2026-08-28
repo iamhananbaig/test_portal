@@ -91,6 +91,8 @@ cd api && npm run build         # vite build (Blade assets)
 - Auth context at `frontend/src/context/AuthContext.tsx` — stores token + user in localStorage
 - Vite dev server proxies `/api` and `/storage` to `http://127.0.0.1:8000` (backend)
 - Pages export default functions, no barrel exports
+- **react-hook-form** with **zod** schemas for form validation (see `frontend/src/lib/validations.ts`)
+- **@tanstack/react-query** for server state management and caching
 
 ## Database
 
