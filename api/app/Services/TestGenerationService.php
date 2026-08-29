@@ -8,6 +8,7 @@ use App\Models\Question;
 use App\Models\Test;
 use App\Models\TestProfile;
 use App\Models\TestQuestion;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TestGenerationService
@@ -68,25 +69,27 @@ class TestGenerationService
             }
         }
 
-        $testId = $this->generateUniqueId();
+        return DB::transaction(function () use ($candidateName, $candidateCnic, $candidateId, $durationMinutes, $totalMarks, $testQuestions) {
+            $testId = $this->generateUniqueId();
 
-        $test = Test::create([
-            'test_id' => $testId,
-            'candidate_name' => $candidateName,
-            'candidate_cnic' => $candidateCnic,
-            'candidate_id' => $candidateId,
-            'duration_minutes' => $durationMinutes,
-            'total_marks' => $totalMarks,
-            'status' => 'ready',
-            'created_at' => now(),
-            'expires_at' => now()->addHour(),
-        ]);
+            $test = Test::create([
+                'test_id' => $testId,
+                'candidate_name' => $candidateName,
+                'candidate_cnic' => $candidateCnic,
+                'candidate_id' => $candidateId,
+                'duration_minutes' => $durationMinutes,
+                'total_marks' => $totalMarks,
+                'status' => 'ready',
+                'created_at' => now(),
+                'expires_at' => now()->addHour(),
+            ]);
 
-        foreach ($testQuestions as $tq) {
-            TestQuestion::create(array_merge($tq, ['test_id' => $test->id]));
-        }
+            foreach ($testQuestions as $tq) {
+                TestQuestion::create(array_merge($tq, ['test_id' => $test->id]));
+            }
 
-        return $test->load('test_questions.question');
+            return $test->load('test_questions.question');
+        });
     }
 
     public function generateFromProfile(

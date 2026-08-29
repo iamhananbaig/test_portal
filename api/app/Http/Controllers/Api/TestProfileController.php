@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateTestProfileRequest;
 use App\Models\TestProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class TestProfileController extends Controller
 {
@@ -46,23 +47,25 @@ class TestProfileController extends Controller
 
     public function update(UpdateTestProfileRequest $request, TestProfile $testProfile): JsonResponse
     {
-        $testProfile->update($request->only('name', 'duration_minutes'));
+        return DB::transaction(function () use ($request, $testProfile) {
+            $testProfile->update($request->only('name', 'duration_minutes'));
 
-        $testProfile->categories()->delete();
+            $testProfile->categories()->delete();
 
-        foreach ($request->categories as $cat) {
-            $testProfile->categories()->create([
-                'category_id' => $cat['category_id'],
-                'question_count' => $cat['question_count'],
+            foreach ($request->categories as $cat) {
+                $testProfile->categories()->create([
+                    'category_id' => $cat['category_id'],
+                    'question_count' => $cat['question_count'],
+                ]);
+            }
+
+            $testProfile->load('categories.category');
+
+            return response()->json([
+                'message' => 'Test profile updated.',
+                'data' => new TestProfileResource($testProfile),
             ]);
-        }
-
-        $testProfile->load('categories.category');
-
-        return response()->json([
-            'message' => 'Test profile updated.',
-            'data' => new TestProfileResource($testProfile),
-        ]);
+        });
     }
 
     public function destroy(TestProfile $testProfile): JsonResponse

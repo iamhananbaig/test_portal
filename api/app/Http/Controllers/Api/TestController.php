@@ -46,6 +46,10 @@ class TestController extends Controller
                 ], 201);
             } catch (InsufficientQuestionsException $e) {
                 return response()->json(['message' => $e->getMessage()], 422);
+            } catch (\InvalidArgumentException $e) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            } catch (\RuntimeException $e) {
+                return response()->json(['message' => $e->getMessage()], 500);
             }
         }
 
@@ -77,6 +81,8 @@ class TestController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
