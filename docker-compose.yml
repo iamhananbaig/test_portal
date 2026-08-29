@@ -18,6 +18,8 @@ services:
     networks:
       - internal
       - npm_network
+    volumes:
+      - storage:/app/storage:ro
     depends_on:
       api:
         condition: service_healthy
