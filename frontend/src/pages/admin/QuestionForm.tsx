@@ -242,7 +242,8 @@ export default function QuestionForm() {
       }
 
       if (isEditing) {
-        await api.put(`/questions/${id}`, formData, {
+        formData.append('_method', 'PUT')
+        await api.post(`/questions/${id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         })
       } else {
