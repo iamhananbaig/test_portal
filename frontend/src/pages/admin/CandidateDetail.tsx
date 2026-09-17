@@ -152,7 +152,8 @@ export default function CandidateDetail() {
                     const url = window.URL.createObjectURL(new Blob([response.data]))
                     const link = document.createElement('a')
                     link.href = url
-                    link.setAttribute('download', candidate.cv_path!.split('/').pop() || 'cv')
+                    const ext = candidate.cv_path!.split('.').pop() || 'pdf'
+                    link.setAttribute('download', `${candidate.name}.${ext}`)
                     document.body.appendChild(link)
                     link.click()
                     link.remove()

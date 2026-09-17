@@ -75,6 +75,12 @@ export default function QuestionForm() {
   const watchCategoryId = useWatch({ control, name: 'category_id' })
   const watchType = useWatch({ control, name: 'type' })
 
+  useEffect(() => {
+    if (watchType === 'descriptive') {
+      setValue('options', [], { shouldValidate: true })
+    }
+  }, [watchType, setValue])
+
   const optionImagePreviews = useMemo(() => {
     return pendingOptionImages.map((file, i) => {
       if (file) return URL.createObjectURL(file)

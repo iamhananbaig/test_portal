@@ -11,9 +11,19 @@ export const questionSchema = z.object({
   marks: z.string().min(1, 'Marks are required').refine((v) => Number(v) > 0, 'Marks must be greater than 0'),
   options: z.array(z.object({
     label: z.string(),
-    text: z.string().min(1, 'Option text is required'),
+    text: z.string(),
     is_correct: z.boolean(),
   })).optional(),
+}).superRefine((data, ctx) => {
+  if (data.type === 'mcq') {
+    if (!data.options || data.options.length !== 4) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'MCQ must have exactly 4 options', path: ['options'] })
+    } else if (data.options.some(o => o.text.length === 0)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'All options must have text', path: ['options'] })
+    } else if (data.options.filter(o => o.is_correct).length !== 1) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'MCQ must have exactly one correct option', path: ['options'] })
+    }
+  }
 })
 
 export const testGenerateSchema = z.object({
